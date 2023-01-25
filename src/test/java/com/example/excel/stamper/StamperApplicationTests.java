@@ -66,6 +66,30 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+	@Test
+	public void testMappingBean() {
+
+		System.out.println("testMappingBean");
+
+		try {
+			Object o = stamperApp;
+			java.beans.BeanInfo bi = java.beans.Introspector.getBeanInfo(PoiExcelStamper.class);
+			java.beans.PropertyDescriptor[] pds = bi.getPropertyDescriptors();
+			for (int i=0; i<pds.length; i++) {
+				// Get property name
+				String propName = pds[i].getName();
+
+				// Get the value of prop1
+				java.beans.Expression expr = new java.beans.Expression(o, "getItem", new Object[0]);
+				expr.execute();
+				String s = (String)expr.getValue();
+				System.out.println(propName + " " + s);
+			}
+			// class, prop1, prop2, PROP3
+		} catch (Exception e) {
+		}
+	}
+
 /* 
 	@Test
 	public void testWriteChanges() {

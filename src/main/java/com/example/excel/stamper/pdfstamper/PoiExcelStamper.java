@@ -34,6 +34,10 @@ public class PoiExcelStamper  {
 	String fileLocation = "Test Domestic Standard Upload Template.xlsx";
 	Workbook workbook = null;
 
+	private String item = "myitem";
+	public String getItem() { return item; };
+	public void setItem(String item) { this.item = item; }
+
 	public PoiExcelStamper() {
 		
 		try {
@@ -118,9 +122,11 @@ public class PoiExcelStamper  {
 				if (r != null) {
 
 					for(String val : names) {		
+						
 						Name namedCell = workbook.getName(val); 
 						CellReference cellsref = new CellReference(namedCell.getRefersToFormula());
 						Cell c = r.createCell(cellsref.getCol());
+
 						CellStyle cs = headerRow.getCell(cellsref.getCol()).getCellStyle();
 						cs.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);  
 						c.setCellStyle(cs);
