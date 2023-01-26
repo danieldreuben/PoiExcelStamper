@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 
 import com.example.excel.stamper.pdfstamper.PoiExcelStamper;
+import com.example.excel.stamper.mapper.DomesticStandardUploadTemplate;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,27 +67,50 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+
+	@Test
+	public void testReadXls() {
+		try {
+			List<Object> domesticUploadList = stamperApp.getJsonFromNamedCols2(DomesticStandardUploadTemplate.class);
+			DomesticStandardUploadTemplate domesticUploadBean = (DomesticStandardUploadTemplate) domesticUploadList.get(0);
+			System.out.println("dut color = " + domesticUploadBean.getColor());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	//@Autowired
+    //DomesticStandardUploadTemplate domesticUploadTemplate;
+
 	@Test
 	public void testMappingBean() {
 
-		System.out.println("testMappingBean");
+		System.out.println(">>> testMappingBean\n");
+		DomesticStandardUploadTemplate domesticUploadTemplate = new DomesticStandardUploadTemplate();
 
 		try {
-			Object o = stamperApp;
-			java.beans.BeanInfo bi = java.beans.Introspector.getBeanInfo(PoiExcelStamper.class);
+
+			Object o = domesticUploadTemplate;
+			java.beans.BeanInfo bi = java.beans.Introspector.getBeanInfo(DomesticStandardUploadTemplate.class);
 			java.beans.PropertyDescriptor[] pds = bi.getPropertyDescriptors();
+			//System.out.println("pds : " + pds);
+
 			for (int i=0; i<pds.length; i++) {
-				// Get property name
+
 				String propName = pds[i].getName();
 
-				// Get the value of prop1
-				java.beans.Expression expr = new java.beans.Expression(o, "getItem", new Object[0]);
-				expr.execute();
-				String s = (String)expr.getValue();
-				System.out.println(propName + " " + s);
+				if (propName.compareTo("class") != 0) {
+					String getter = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+					java.beans.Expression expr = new java.beans.Expression(o, getter, new Object[0]);
+					expr.execute();
+					String s = (String)expr.getValue();
+					System.out.print(propName + ":" + s + " "); 
+				}
+
 			}
-			// class, prop1, prop2, PROP3
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

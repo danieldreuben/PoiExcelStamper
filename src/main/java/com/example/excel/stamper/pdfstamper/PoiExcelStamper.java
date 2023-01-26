@@ -51,6 +51,39 @@ public class PoiExcelStamper  {
 		}
 	}
 
+	public List<Object>  getJsonFromNamedCols2(Class mappingBeanClass) {
+		List<Object> names = null;
+
+		try {
+			java.beans.BeanInfo bi = java.beans.Introspector.getBeanInfo(mappingBeanClass);
+			java.beans.PropertyDescriptor[] pds = bi.getPropertyDescriptors();
+			names = new ArrayList<Object>();
+
+			Object mapperbean = mappingBeanClass.getConstructor().newInstance();
+
+			for (int i=0; i<pds.length; i++) {
+
+				String propName = pds[i].getName();
+				//System.out.print(">>>>>>" + propName + " " + pds.length);
+				if (propName.compareTo("class") != 0) {
+					String setter = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+					java.beans.Statement stmt = new java.beans.Statement(mapperbean, setter, new Object[]{"My Prop Value"});
+					stmt.execute();
+					System.out.println(">>setter " + setter);
+				}
+
+			}
+			names.add(mapperbean);
+			System.out.println("names " + names.size());
+
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return names;
+
+	}
+
 	// @method getJsonFromNamedCols 
 	// reads list of named fields from a worksheet (by row)
 	// it assumes all subsequent cols in names are in the same worksheet as first  
