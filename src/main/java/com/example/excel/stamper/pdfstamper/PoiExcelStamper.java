@@ -3,6 +3,9 @@ package com.example.excel.stamper.pdfstamper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Hashtable;
+
+import com.example.excel.stamper.mapper.NameMappingBean;
 
 import org.springframework.stereotype.Component;
 
@@ -31,70 +34,25 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @Component
 public class PoiExcelStamper  {
-	String fileLocation = "Test Domestic Standard Upload Template.xlsx";
+	//String fileLocation = "Test Domestic Standard Upload Template.xlsx";
 	Workbook workbook = null;
 
-	private String item = "myitem";
-	public String getItem() { return item; };
-	public void setItem(String item) { this.item = item; }
-
 	public PoiExcelStamper() {
-		
-		try {
-			FileInputStream inputStream = new FileInputStream(new File(fileLocation));
-			workbook = new XSSFWorkbook(inputStream);
-			FormulaEvaluator evaluator = workbook.getCreationHelper()
-				.createFormulaEvaluator();
-
-		} catch (Exception e) {
-			e.printStackTrace();	
-		}
 	}
 
-	public List<Object>  getJsonFromNamedCols2(Class mappingBeanClass) {
-		List<Object> names = null;
-
-		try {
-			java.beans.BeanInfo bi = java.beans.Introspector.getBeanInfo(mappingBeanClass);
-			java.beans.PropertyDescriptor[] pds = bi.getPropertyDescriptors();
-			names = new ArrayList<Object>();
-
-			Object mapperbean = mappingBeanClass.getConstructor().newInstance();
-
-			for (int i=0; i<pds.length; i++) {
-
-				String propName = pds[i].getName();
-				//System.out.print(">>>>>>" + propName + " " + pds.length);
-				if (propName.compareTo("class") != 0) {
-					String setter = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
-					java.beans.Statement stmt = new java.beans.Statement(mapperbean, setter, new Object[]{"My Prop Value"});
-					stmt.execute();
-					System.out.println(">>setter " + setter);
-				}
-
-			}
-			names.add(mapperbean);
-			System.out.println("names " + names.size());
-
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return names;
-
-	}
 
 	// @method getJsonFromNamedCols 
 	// reads list of named fields from a worksheet (by row)
 	// it assumes all subsequent cols in names are in the same worksheet as first  
 	// <p>
 	// @param names a list of named columns to read
-	// @return a json doc
+	// @return a hashtable of mapped bean values
 
-	public void getJsonFromNamedCols(List<String> names) {
+	public Hashtable<String, NameMappingBean> getJsonFromNamedCols(List<String> names) {
 
-		if (names.size() == 0) return;
+		if (names.size() == 0) return null;
 
+		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 		CellReference cellReference = getNamedCell(names.get(0));
 		Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
 		int startRow = cellReference.getRow();
@@ -110,13 +68,16 @@ public class PoiExcelStamper  {
 					CellReference cellsref = getNamedCell(val);				
 					Cell c = r.getCell(cellsref.getCol()); 
 					
+					NameMappingBean nmb = (cols.get(val) != null) ? cols.get(val) : new NameMappingBean(val); 
+					cols.put(val, nmb);
+
 					if (c != null)
 					switch (c.getCellType()) {
 						case NUMERIC:
-							System.out.print(">>> " + val + ":" + c.getNumericCellValue());
+							nmb.setValue(c.getNumericCellValue());
 							continue;
 						case STRING:
-							System.out.print(">>> " + val + ":" +c.getStringCellValue());
+							nmb.setValue(c.getStringCellValue());
 							continue;
 						case BLANK:
 						case _NONE:
@@ -124,9 +85,10 @@ public class PoiExcelStamper  {
 							break;
 					} 			
 				}		
-				System.out.print("\n");
 			} 
 		} while (r != null);
+
+		return cols;
 	} 
 
 	// @method getJsonFromNamedCols 
@@ -136,39 +98,41 @@ public class PoiExcelStamper  {
 	// @param names a list of named columns to read
 	// @return a json doc
 
-	public void writeToNamedCols(List<String> names) 
+	public void writeToNamedCols(List<NameMappingBean> names) 
 		throws Exception {
 
 		try {
 
-			CellReference cellReference = getNamedCell(names.get(0));
+			CellReference cellReference = getNamedCell(names.get(0).getName());
 			Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
 			Row headerRow = workSheet.getRow(cellReference.getRow());
 			//int startRow = cellReference.getRow();
 			Row r = null; 
 			int startRow = workSheet.getLastRowNum(); 
-			System.out.println(">>> write-cols " + names);
+			int maxrows = names.stream().mapToInt(p-> p.getValues().size()).max().getAsInt();
+			//System.out.println(">>> write-cols " + names);
 
-			do {
-				r = workSheet.createRow(++startRow); // workSheet.getRow(++startRow); 
+			for (int index = 0; index < maxrows; index++) {
 
-				if (r != null) {
+				r = workSheet.createRow(++startRow); // .getRow(++startRow); 
 
-					for(String val : names) {		
-						
-						Name namedCell = workbook.getName(val); 
-						CellReference cellsref = new CellReference(namedCell.getRefersToFormula());
-						Cell c = r.createCell(cellsref.getCol());
+				//if (r != null) {
 
-						CellStyle cs = headerRow.getCell(cellsref.getCol()).getCellStyle();
-						cs.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);  
-						c.setCellStyle(cs);
-						c.setCellValue((String) "val:" + val);					
+					for(NameMappingBean val : names) {		
+
+						if (index < val.getValues().size()) {
+					
+							Name namedCell = workbook.getName(val.getName()); 
+
+							CellReference cellsref = new CellReference(namedCell.getRefersToFormula());
+							Cell c = r.createCell(cellsref.getCol());
+							CellStyle cs = headerRow.getCell(cellsref.getCol()).getCellStyle();  
+							c.setCellStyle(cs);
+							c.setCellValue((String) val.getValues().get(index));		
+						}			
 					}
-				}
-			} while (startRow < 20);
-
-			writeXlsxFile("modified-3.xlsx");
+				//}
+			}
 
 		} catch (Exception e) {
 			throw e;
@@ -181,10 +145,23 @@ public class PoiExcelStamper  {
 	//
 	public List<String> getNames(List<String> names) {
 		List<String> present = new ArrayList<String>();		
-		//java.util.List<? extends Name> allNames = workbook.getAllNames();
 		
 		for(String val : names){
 			if (workbook.getName(val) != null)
+				present.add(val); 
+		}
+		return present;
+	} 
+
+	// @method getNames 
+	// @param names a list of mapping beans to check within the workbook
+	// @return a list of names present within the workbook 
+	//
+	public List<NameMappingBean> getWorkbookNames(List<NameMappingBean> beans) {
+		List<NameMappingBean> present = new ArrayList<NameMappingBean>();		
+		
+		for(NameMappingBean val : beans) {
+			if (workbook.getName(val.getName()) != null)
 				present.add(val); 
 		}
 		return present;
@@ -200,10 +177,25 @@ public class PoiExcelStamper  {
 			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
 	}
 
+	// @method getWorkbookFromFileInput 
+	// gets workbook from file location (used here for testing only) 
+	// <p>
+	public Workbook getWorkbookFromFileInput(String fileLocation) {
+
+		try {
+			FileInputStream inputStream = new FileInputStream(new File(fileLocation));
+			this.workbook = new XSSFWorkbook(inputStream);
+			FormulaEvaluator evaluator = workbook.getCreationHelper()
+				.createFormulaEvaluator();
+
+		} catch (Exception e) {
+			e.printStackTrace();	
+		}
+		return workbook;
+	}	
+
 	public void writeXlsxFile(String filename) throws Exception {
 		try {
-			
-			System.out.println("\nwriting to file: " + filename);
 			FileOutputStream out = new FileOutputStream(new File(filename));
 			workbook.write(out);
 			out.close();
@@ -212,7 +204,57 @@ public class PoiExcelStamper  {
 		}
 	}
 
+	// @method getJsonFromNamedCols 
+	// java reflection example dynamically generates mapping class and invokes setters (incomplete) 
+	// 
+	// @param mappingBeanClass a java bean class with name setters / getters 
+	// @return a list of mappingBeanClass rows 
+	public List<Object>  getJsonFromNamedCols2(Class mappingBeanClass) {
+		List<Object> names = null;
 
+		try {
+			java.beans.BeanInfo bi = java.beans.Introspector.getBeanInfo(mappingBeanClass);
+			java.beans.PropertyDescriptor[] pds = bi.getPropertyDescriptors();
+			names = new ArrayList<Object>();
+
+			Object mapperbean = mappingBeanClass.getConstructor().newInstance();
+
+			for (int i=0; i<pds.length; i++) {
+
+				String propName = pds[i].getName();
+
+				if (propName.compareTo("class") != 0) {
+					String setter = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+					java.beans.Statement stmt = new java.beans.Statement(mapperbean, setter, new Object[]{"My Prop Value"});
+					stmt.execute();
+					//System.out.println(">>setter " + setter);
+				}
+
+			}
+			names.add(mapperbean);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return names;
+	}
+
+	public List<NameMappingBean> getTestNamedMappingBeans(List<String> names, int max) {
+
+		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
+
+		for(String val : names) {	
+			int random = (int) (java.lang.Math.random() * max + 1); 
+			List<String> cells = new ArrayList<String>();
+
+			for (int i = 0; i < random; i++) {
+				cells.add(val.substring(0, 3)+":"+i);
+			}
+			beans.add(new NameMappingBean(val, cells));
+		}
+
+		return beans;
+	}
 /* 
 	public void handleExcelFile(String cellName) throws Exception {
 

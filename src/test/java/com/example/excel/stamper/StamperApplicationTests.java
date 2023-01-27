@@ -3,9 +3,10 @@ package com.example.excel.stamper;
 import java.util.List;
 import java.util.Arrays;
 
-
 import com.example.excel.stamper.pdfstamper.PoiExcelStamper;
 import com.example.excel.stamper.mapper.DomesticStandardUploadTemplate;
+
+import com.example.excel.stamper.mapper.NameMappingBean;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,15 @@ class StamperApplicationTests {
 	@Test
 	public void testReadMulticols() {
 		try {
+			String fileLocation = "Test Domestic Standard Upload Template.xlsx";
+			stamperApp.getWorkbookFromFileInput(fileLocation);
 			String[] strArray = {"color","test","label","size","ross","dds","vpn","typeofbuy","department"};
 			List<String> names = Arrays.asList(strArray);
-			stamperApp.getJsonFromNamedCols(stamperApp.getNames(names));
+			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.getJsonFromNamedCols(stamperApp.getNames(names));
+
+			for(String val : strArray) 
+				if (nmb.get(val) != null) 
+					System.out.println("results : " + nmb.get(val));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -44,21 +51,30 @@ class StamperApplicationTests {
 	@Test
 	public void testWriteMulticols() {
 		try {
-			String[] strArray = {"color","style","department","size","vpn","category"};
+
+			String fileLocation = "Domestic Standard Upload Template.xlsx";			
+			String[] strArray = {"color","style","department","size","typeofbuy",
+									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
 			List<String> names = Arrays.asList(strArray);
-			stamperApp.writeToNamedCols(stamperApp.getNames(names));
+			List<NameMappingBean> beans = stamperApp.getTestNamedMappingBeans(names, 100);
+
+			stamperApp.getWorkbookFromFileInput(fileLocation);
+			stamperApp.writeToNamedCols(stamperApp.getWorkbookNames(beans));
+			stamperApp.writeXlsxFile("X-"+fileLocation);
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			assertTrue(false);
 		}
 		assertTrue(true);
 	}
 
+	// queries workbook for defined names
+
 	@Test
 	public void testNames() {
 		try {
-			String[] strArray = {"color","test","label","abcd","ross","dds","vpn","$$$","typeofbuy","department"};
+			String[] strArray = {"color","test","label","abcd","ross","dds","vpn","$$$","typeofbuy","department","supplierid","category","vendorstyledescription"};
 			List<String> names = Arrays.asList(strArray);
 			System.out.println("\n>>> names present in workbook: " + stamperApp.getNames(names));
 		} catch (Exception e) {
@@ -67,13 +83,18 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+	// reflection example works (test data current), needs mapping to xlsx read but unlikely runtime efficient
 
 	@Test
-	public void testReadXls() {
+	public void testReadXlsReflectionBeans() {
 		try {
-			List<Object> domesticUploadList = stamperApp.getJsonFromNamedCols2(DomesticStandardUploadTemplate.class);
-			DomesticStandardUploadTemplate domesticUploadBean = (DomesticStandardUploadTemplate) domesticUploadList.get(0);
+			List<Object> domesticUploadList = 
+				stamperApp.getJsonFromNamedCols2(DomesticStandardUploadTemplate.class);
+			DomesticStandardUploadTemplate domesticUploadBean = 
+				(DomesticStandardUploadTemplate) domesticUploadList.get(0);
+
 			System.out.println("dut color = " + domesticUploadBean.getColor());
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
