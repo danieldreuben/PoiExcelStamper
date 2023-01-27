@@ -20,6 +20,8 @@ import java.beans.Transient;
 
 @SpringBootTest
 class StamperApplicationTests {
+	String fileLocation = "Domestic Standard Upload Template.xlsx";	
+	String writeFileLocation = "X-" + fileLocation;
 
 	@Autowired
     private PoiExcelStamper stamperApp;
@@ -28,14 +30,33 @@ class StamperApplicationTests {
 	void contextLoads() {
 	}
 
+	
+	@Test
+	public void testWriteMulticols() {
+		try {
+			String[] strArray = {"color","style","department","size","typeofbuy","material",
+									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
+			List<String> names = Arrays.asList(strArray);
+			List<NameMappingBean> beans = stamperApp.getTestNamedMappingBeans(names, 50);
+
+			stamperApp.getWorkbookFromFileInput(fileLocation);
+			stamperApp.writeToNamedCols2(stamperApp.getWorkbookNames(beans));
+			stamperApp.writeXlsxFile(writeFileLocation);
+			
+		} catch (Exception e) {
+			//e.printStackTrace();
+			assertTrue(false);
+		}
+		assertTrue(true);
+	}
+
 	@Test
 	public void testReadMulticols() {
 		try {
-			String fileLocation = "Test Domestic Standard Upload Template.xlsx";
-			stamperApp.getWorkbookFromFileInput(fileLocation);
+			stamperApp.getWorkbookFromFileInput(writeFileLocation);
 			String[] strArray = {"color","test","label","size","ross","dds","vpn","typeofbuy","department"};
 			List<String> names = Arrays.asList(strArray);
-			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.getJsonFromNamedCols(stamperApp.getNames(names));
+			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.getJsonFromNamedCols2(stamperApp.getNames(names));
 
 			for(String val : strArray) 
 				if (nmb.get(val) != null) 
@@ -48,26 +69,6 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
-	@Test
-	public void testWriteMulticols() {
-		try {
-
-			String fileLocation = "Domestic Standard Upload Template.xlsx";			
-			String[] strArray = {"color","style","department","size","typeofbuy",
-									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
-			List<String> names = Arrays.asList(strArray);
-			List<NameMappingBean> beans = stamperApp.getTestNamedMappingBeans(names, 100);
-
-			stamperApp.getWorkbookFromFileInput(fileLocation);
-			stamperApp.writeToNamedCols(stamperApp.getWorkbookNames(beans));
-			stamperApp.writeXlsxFile("X-"+fileLocation);
-			
-		} catch (Exception e) {
-			//e.printStackTrace();
-			assertTrue(false);
-		}
-		assertTrue(true);
-	}
 
 	// queries workbook for defined names
 
@@ -84,7 +85,7 @@ class StamperApplicationTests {
 	}
 
 	// reflection example works (test data current), needs mapping to xlsx read but unlikely runtime efficient
-
+/* 
 	@Test
 	public void testReadXlsReflectionBeans() {
 		try {
@@ -93,16 +94,13 @@ class StamperApplicationTests {
 			DomesticStandardUploadTemplate domesticUploadBean = 
 				(DomesticStandardUploadTemplate) domesticUploadList.get(0);
 
-			System.out.println("dut color = " + domesticUploadBean.getColor());
+			//System.out.println("dut color = " + domesticUploadBean.getColor());
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-
-	//@Autowired
-    //DomesticStandardUploadTemplate domesticUploadTemplate;
 
 	@Test
 	public void testMappingBean() {
@@ -135,7 +133,7 @@ class StamperApplicationTests {
 		}
 	}
 
-/* 
+
 	@Test
 	public void testWriteChanges() {
 		try {

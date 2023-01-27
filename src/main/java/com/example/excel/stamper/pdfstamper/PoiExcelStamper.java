@@ -40,6 +40,49 @@ public class PoiExcelStamper  {
 	public PoiExcelStamper() {
 	}
 
+	// @method getJsonFromNamedCols2
+	// reads list of named fields from a worksheet (by row)
+	// it assumes all subsequent cols in names are in the same worksheet as first  
+	// <p>
+	// @param names a list of named columns to read
+	// @return a hashtable of mapped bean values
+
+	public Hashtable<String, NameMappingBean> getJsonFromNamedCols2(List<String> names) {
+
+		if (names.size() == 0) return null;
+
+		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
+
+		for(String val : names) {
+				
+			CellReference cellsref = getNamedCell(val);				
+			Sheet workSheet = workbook.getSheet(cellsref.getSheetName());
+			int startRow = cellsref.getRow();
+			Row r = workSheet.getRow(++startRow);
+			NameMappingBean nmb = new NameMappingBean(val); 
+
+			for (; r != null; r = workSheet.getRow(++startRow)) {
+				Cell c = r.getCell(cellsref.getCol()); 
+				
+				if (c != null)
+				switch (c.getCellType()) {
+					case NUMERIC:
+						nmb.setValue(c.getNumericCellValue());
+						continue;
+					case STRING:
+						nmb.setValue(c.getStringCellValue());
+						continue;
+					case BLANK:
+					case _NONE:
+					case ERROR:
+						break;
+				} 
+			}
+			cols.put(val, nmb);   
+		}	
+
+		return cols;
+	} 
 
 	// @method getJsonFromNamedCols 
 	// reads list of named fields from a worksheet (by row)
@@ -89,6 +132,39 @@ public class PoiExcelStamper  {
 		} while (r != null);
 
 		return cols;
+	} 
+
+	// @method writeToNamedCols2 
+	// writes list of named beans to a worksheet (by col) 
+	// <p>
+	// @param names a beans write
+
+	public void writeToNamedCols2(List<NameMappingBean> names) 
+		throws Exception {
+
+		try {
+
+			for(NameMappingBean val : names) {	
+
+				CellReference cellReference = getNamedCell(val.getName());
+				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
+				Row headerRow = workSheet.getRow(cellReference.getRow());
+				int startRow = headerRow.getRowNum()+1;
+				int existRows = workSheet.getLastRowNum(); 
+				
+				for (int index = 0; index < val.getValues().size(); index++) {
+
+					Row r = (startRow < existRows ? workSheet.getRow(startRow++) : workSheet.createRow(startRow++));
+					Cell c = r.createCell(cellReference.getCol());
+					CellStyle cs = headerRow.getCell(cellReference.getCol()).getCellStyle();  					
+					c.setCellStyle(cs);
+					c.setCellValue((String) val.getValues().get(index));	
+				}
+			}
+
+		} catch (Exception e) {
+			throw e;
+		}
 	} 
 
 	// @method getJsonFromNamedCols 
