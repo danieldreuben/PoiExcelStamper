@@ -42,9 +42,8 @@ public class NamesSerializer  {
 	public NamesSerializer() {
 	}
 
-	// @method getJsonFromNamedCols2
-	// reads list of named fields from a worksheet (by row)
-	// it assumes all subsequent cols in names are in the same worksheet as first  
+	// @method getFromNamedCols
+	// reads list of named fields from a worksheet (by col)
 	// <p>
 	// @param names a list of named columns to read
 	// @return a hashtable of mapped bean values
@@ -58,7 +57,7 @@ public class NamesSerializer  {
 
 		for(String val : names) {
 				
-			CellReference cellsref = getStartCellInRange(val);				
+			CellReference cellsref = getLastCellInRange(val);				
 			Sheet workSheet = workbook.getSheet(cellsref.getSheetName());
 			int startRow = cellsref.getRow();
 			Row r = workSheet.getRow(++startRow);
@@ -87,11 +86,10 @@ public class NamesSerializer  {
 		return cols;
 	} 
 
-
-	// @method writeToNamedCols2 
+	// @method writeToNamedCols
 	// writes list of named beans to a worksheet (by col) 
 	// <p>
-	// @param names a beans write
+	// @param names a list of mapper beans to write
 
 	public void writeToNamedCols(List<NameMappingBean> names) 
 		throws Exception {
@@ -100,7 +98,7 @@ public class NamesSerializer  {
 
 			for(NameMappingBean val : names) {	
 
-				CellReference cellReference = getStartCellInRange(val.getName());
+				CellReference cellReference = getLastCellInRange(val.getName());
 				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
 				int startRow = cellReference.getRow();
 				int existRows = workSheet.getLastRowNum(); 
@@ -121,6 +119,7 @@ public class NamesSerializer  {
 	} 
 
 	// @method getNames 
+	// checks name in workbook
 	// @param names a list of names to check within the workbook
 	// @return a list of names present within the workbook 
 	//
@@ -134,7 +133,8 @@ public class NamesSerializer  {
 		return present;
 	} 
 
-	// @method getNames 
+	// @method getWorkbookNames 
+	// checks mapping beans (names) presence in workbook 
 	// @param names a list of mapping beans to check within the workbook
 	// @return a list of names present within the workbook 
 	//
@@ -149,7 +149,7 @@ public class NamesSerializer  {
 	} 
 
 	// @method getNamedCell 
-	// @return a Poi cell reference for the named cell
+	// @return a cell reference for the named cell
 	//
 	private CellReference getNamedCell(String name) {
 		Name aNamedCell = workbook.getName(name); 
@@ -160,14 +160,15 @@ public class NamesSerializer  {
 	}
 
 	// @method getNamedCellInRange
-	// names in workbooks refer to single cell / ranges, convert named cell to AreaReference to 
-	// identify cells within the range. Generally, start reads / writes after last cell in the range. 
-	// Range cannot be contiguious to mark blocks so restricting to 10. This method assumes name is 
+	// <p>
+	// names in workbook may refer to single cell / ranges, this method converts either to AreaReference 
+	// and returns last cell. Generally, start reads / writes after last cell in the range. 
+	// Range is considered a marker in this case (restricting to 10). Assumes name is 
 	// present in the workbook 
 	// @param a workbook named cell / range 
 	// @return last cell in valid range  
 	//
-	private CellReference getStartCellInRange (String name) {
+	private CellReference getLastCellInRange(String name) throws RuntimeException {
 		
 		CellReference ref = null;
 
@@ -180,7 +181,7 @@ public class NamesSerializer  {
 				throw new Exception("Cannot have range marker > 10 ..");
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		return ref;
 	}
@@ -239,7 +240,7 @@ public class NamesSerializer  {
 				}
 			}
 			names.add(mapperbean);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
