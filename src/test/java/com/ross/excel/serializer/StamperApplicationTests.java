@@ -35,7 +35,7 @@ class StamperApplicationTests {
 	@Test
 	public void testWriteMulticols() {
 		try {
-			String[] strArray = {"color","style","department","size","typeofbuy","material",
+			String[] strArray = {"color","style","department","size","typeofbuy","material","weight",
 									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
 			List<String> names = Arrays.asList(strArray);
 			List<NameMappingBean> beans = getTestNamedMappingBeans(names, 50);
@@ -54,7 +54,7 @@ class StamperApplicationTests {
 	public void testReadMulticols() {
 		try {
 			stamperApp.getWorkbookFromFileInput(readFileLocation);
-			String[] strArray = {"color","test","label","size","ross","dds","vpn","typeofbuy","department","category","ponumber"};
+			String[] strArray = {"color","test","label","size","ross","dds","vpn","weight","typeofbuy","department","category","ponumber"};
 			List<String> names = Arrays.asList(strArray);
 			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.getFromNamedCols(stamperApp.getNames(names));
 

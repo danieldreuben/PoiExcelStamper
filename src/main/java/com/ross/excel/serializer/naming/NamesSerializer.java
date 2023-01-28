@@ -56,7 +56,7 @@ public class NamesSerializer  {
 		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 
 		for(String val : names) {
-				
+							
 			CellReference cellsref = getLastCellInRange(val);				
 			Sheet workSheet = workbook.getSheet(cellsref.getSheetName());
 			int startRow = cellsref.getRow();
@@ -177,8 +177,9 @@ public class NamesSerializer  {
 			AreaReference aref = new AreaReference(namedCellIdx.getRefersToFormula(), workbook.getSpreadsheetVersion());         
 			//System.out.println(">>> aref : " + aref.getFirstCell() + " :: " + aref.getLastCell());
 			ref = aref.getLastCell(); 
-			if (aref.isWholeColumnReference() == true || aref.getAllReferencedCells().length > 10) 
-				throw new Exception("Cannot have range marker > 10 ..");
+			if (aref.isWholeColumnReference() == true || aref.getAllReferencedCells().length > 10
+				|| aref.getLastCell().getCol() != aref.getFirstCell().getCol()) 
+				throw new Exception("Invalid marker range-name [must be single col range , < 10 cells]");
 
 		} catch (Exception e) {
 			throw new RuntimeException(e);
