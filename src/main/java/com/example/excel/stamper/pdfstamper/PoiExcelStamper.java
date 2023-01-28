@@ -151,26 +151,25 @@ public class PoiExcelStamper  {
 
 				CellReference cellReference = getStartCellInRange(val.getName());
 				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
-				Row headerRow = workSheet.getRow(cellReference.getRow());
-				int startRow = headerRow.getRowNum()+1;
+				int startRow = cellReference.getRow();
 				int existRows = workSheet.getLastRowNum(); 
 				
 				for (int index = 0, max = val.getValues().size(); index < max; index++) {
 
-					Row r = (startRow < existRows ? workSheet.getRow(startRow++) : workSheet.createRow(startRow++));					
-					Cell c = r.createCell(cellReference.getCol());
-					CellStyle cs = headerRow.getCell(cellReference.getCol()).getCellStyle();  					
+					Row r = (++startRow < existRows ? 
+							workSheet.getRow(startRow) : workSheet.createRow(startRow));					
+					Cell c = r.createCell(cellReference.getCol()); 	
+					CellStyle cs = workSheet.getColumnStyle(cellReference.getCol());				
 					c.setCellStyle(cs);
 					c.setCellValue((String) val.getValues().get(index));	
 				}
 			}
-
 		} catch (Exception e) {
 			throw e;
 		}
 	} 
 
-	// @method getJsonFromNamedCols 
+	// @method writeToNamedCols 
 	// reads list of named fields from a worksheet (by row)
 	// it assumes all subsequent cols in names are in the same worksheet as first  
 	// <p>
@@ -211,7 +210,6 @@ public class PoiExcelStamper  {
 					}
 				//}
 			}
-
 		} catch (Exception e) {
 			throw e;
 		}

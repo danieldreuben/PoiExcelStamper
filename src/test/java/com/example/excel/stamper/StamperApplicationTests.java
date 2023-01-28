@@ -31,7 +31,6 @@ class StamperApplicationTests {
 	@Test
 	void contextLoads() {
 	}
-
 	
 	@Test
 	public void testWriteMulticols() {
@@ -40,7 +39,6 @@ class StamperApplicationTests {
 									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
 			List<String> names = Arrays.asList(strArray);
 			List<NameMappingBean> beans = getTestNamedMappingBeans(names, 50);
-
 			stamperApp.getWorkbookFromFileInput(fileLocation);
 			stamperApp.writeToNamedCols2(stamperApp.getWorkbookNames(beans));
 			stamperApp.writeXlsxFile(writeFileLocation);
