@@ -1,13 +1,13 @@
-package com.example.excel.stamper;
+package com.ross.excel.serializer;
 
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import com.example.excel.stamper.pdfstamper.PoiExcelStamper;
-import com.example.excel.stamper.mapper.DomesticStandardUploadTemplate;
-
-import com.example.excel.stamper.mapper.NameMappingBean;
+import com.ross.excel.serializer.StamperApplication;
+import com.ross.excel.serializer.naming.NamesSerializer;
+import com.ross.excel.serializer.mapper.DomesticStandardUploadTemplate;
+import com.ross.excel.serializer.mapper.NameMappingBean;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ class StamperApplicationTests {
 	String readFileLocation = "Y-" + fileLocation;
 
 	@Autowired
-    private PoiExcelStamper stamperApp;
+    private NamesSerializer stamperApp;
 
 	@Test
 	void contextLoads() {

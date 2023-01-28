@@ -1,4 +1,4 @@
-package com.example.excel.stamper.pdfstamper;
+package com.ross.excel.serializer.naming;
 
 
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-import com.example.excel.stamper.mapper.NameMappingBean;
+import com.ross.excel.serializer.mapper.NameMappingBean;
 
 import org.springframework.stereotype.Component;
 
@@ -35,11 +35,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 @Component
-public class PoiExcelStamper  {
+public class NamesSerializer  {
 
 	Workbook workbook = null;
 
-	public PoiExcelStamper() {
+	public NamesSerializer() {
 	}
 
 	// @method getJsonFromNamedCols2

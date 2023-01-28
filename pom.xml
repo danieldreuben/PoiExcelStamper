@@ -8,7 +8,7 @@
 		<version>2.3.6.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example.excel</groupId>
+	<groupId>com.ross.excel.serializer</groupId>
 	<artifactId>stamper</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>stamper</name>
