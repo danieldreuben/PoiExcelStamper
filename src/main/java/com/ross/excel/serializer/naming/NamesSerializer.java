@@ -49,7 +49,7 @@ public class NamesSerializer  {
 	// @param names a list of named columns to read
 	// @return a hashtable of mapped bean values
 
-	public Hashtable<String, NameMappingBean> getJsonFromNamedCols2(List<String> names) {
+	public Hashtable<String, NameMappingBean> getFromNamedCols(List<String> names) {
 
 		if (names.size() == 0) return null;
 		//List<String> names = getWorkbookNames(cnames);
@@ -87,62 +87,13 @@ public class NamesSerializer  {
 		return cols;
 	} 
 
-	// @method getJsonFromNamedCols 
-	// reads list of named fields from a worksheet (by row)
-	// it assumes all subsequent cols in names are in the same worksheet as first  
-	// <p>
-	// @param names a list of named columns to read
-	// @return a hashtable of mapped bean values
-
-	public Hashtable<String, NameMappingBean> getJsonFromNamedCols(List<String> names) {
-
-		if (names.size() == 0) return null;
-
-		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
-		CellReference cellReference = getNamedCell(names.get(0));
-		Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
-		int startRow = cellReference.getRow();
-		Row r = null; 
-
-		do {
-			r =  workSheet.getRow(++startRow); 
-
-			if (r != null) {
-
-				for(String val : names) {
-				
-					CellReference cellsref = getStartCellInRange(val);				
-					Cell c = r.getCell(cellsref.getCol()); 
-					
-					NameMappingBean nmb = (cols.get(val) != null) ? cols.get(val) : new NameMappingBean(val); 
-					cols.put(val, nmb);
-
-					if (c != null)
-					switch (c.getCellType()) {
-						case NUMERIC:
-							nmb.setValue(c.getNumericCellValue());
-							continue;
-						case STRING:
-							nmb.setValue(c.getStringCellValue());
-							continue;
-						case BLANK:
-						case _NONE:
-						case ERROR:
-							break;
-					} 			
-				}		
-			} 
-		} while (r != null);
-
-		return cols;
-	} 
 
 	// @method writeToNamedCols2 
 	// writes list of named beans to a worksheet (by col) 
 	// <p>
 	// @param names a beans write
 
-	public void writeToNamedCols2(List<NameMappingBean> names) 
+	public void writeToNamedCols(List<NameMappingBean> names) 
 		throws Exception {
 
 		try {
@@ -163,52 +114,6 @@ public class NamesSerializer  {
 					c.setCellStyle(cs);
 					c.setCellValue((String) val.getValues().get(index));	
 				}
-			}
-		} catch (Exception e) {
-			throw e;
-		}
-	} 
-
-	// @method writeToNamedCols 
-	// reads list of named fields from a worksheet (by row)
-	// it assumes all subsequent cols in names are in the same worksheet as first  
-	// <p>
-	// @param names a list of named columns to read
-	// @return a json doc
-
-	public void writeToNamedCols(List<NameMappingBean> names) 
-		throws Exception {
-
-		try {
-
-			CellReference cellReference = getStartCellInRange(names.get(0).getName());
-			Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
-			Row headerRow = workSheet.getRow(cellReference.getRow());
-			//int startRow = cellReference.getRow();
-			Row r = null; 
-			int startRow = workSheet.getLastRowNum(); 
-			int maxrows = names.stream().mapToInt(p-> p.getValues().size()).max().getAsInt();
-			//System.out.println(">>> write-cols " + names);
-
-			for (int index = 0; index < maxrows; index++) {
-
-				r = workSheet.createRow(++startRow); // .getRow(++startRow); 
-
-				//if (r != null) {
-
-					for(NameMappingBean val : names) {		
-
-						if (index < val.getValues().size()) {
-					
-							Name namedCell = workbook.getName(val.getName()); 
-							CellReference cellsref = new CellReference(namedCell.getRefersToFormula());
-							Cell c = r.createCell(cellsref.getCol());
-							CellStyle cs = headerRow.getCell(cellsref.getCol()).getCellStyle();  
-							c.setCellStyle(cs);
-							c.setCellValue((String) val.getValues().get(index));		
-						}			
-					}
-				//}
 			}
 		} catch (Exception e) {
 			throw e;
@@ -307,15 +212,12 @@ public class NamesSerializer  {
 		}
 	}
 
-
-/* 
-	
-	// @method getJsonFromNamedCols 
+	// @method getReflectFromNamedCols 
 	// java reflection example dynamically generates mapping class and invokes setters 
 	// 
 	// @param mappingBeanClass a java bean class with name setters / getters 
 	// @return a list of mappingBeanClass rows 
-	public List<Object>  getJsonFromNamedCols2(Class mappingBeanClass) {
+	public List<Object>  getReflectFromNamedCols(Class mappingBeanClass) {
 		List<Object> names = null;
 
 		try {
@@ -335,15 +237,114 @@ public class NamesSerializer  {
 					stmt.execute();
 					//System.out.println(">>setter " + setter);
 				}
-
 			}
 			names.add(mapperbean);
-
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return names;
 	}
+
+/* 
 	
+
+	
+	// @method getJsonFromNamedCols 
+	// reads list of named fields from a worksheet (by row)
+	// it assumes all subsequent cols in names are in the same worksheet as first  
+	// <p>
+	// @param names a list of named columns to read
+	// @return a hashtable of mapped bean values
+
+	public Hashtable<String, NameMappingBean> getFromNamedCols(List<String> names) {
+
+		if (names.size() == 0) return null;
+
+		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
+		CellReference cellReference = getNamedCell(names.get(0));
+		Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
+		int startRow = cellReference.getRow();
+		Row r = null; 
+
+		do {
+			r =  workSheet.getRow(++startRow); 
+
+			if (r != null) {
+
+				for(String val : names) {
+				
+					CellReference cellsref = getStartCellInRange(val);				
+					Cell c = r.getCell(cellsref.getCol()); 
+					
+					NameMappingBean nmb = (cols.get(val) != null) ? cols.get(val) : new NameMappingBean(val); 
+					cols.put(val, nmb);
+
+					if (c != null)
+					switch (c.getCellType()) {
+						case NUMERIC:
+							nmb.setValue(c.getNumericCellValue());
+							continue;
+						case STRING:
+							nmb.setValue(c.getStringCellValue());
+							continue;
+						case BLANK:
+						case _NONE:
+						case ERROR:
+							break;
+					} 			
+				}		
+			} 
+		} while (r != null);
+
+		return cols;
+	} 
+
+		// @method writeToNamedCols 
+	// reads list of named fields from a worksheet (by row)
+	// it assumes all subsequent cols in names are in the same worksheet as first  
+	// <p>
+	// @param names a list of named columns to read
+	// @return a json doc
+
+	public void writeToNamedCols(List<NameMappingBean> names) 
+		throws Exception {
+
+		try {
+
+			CellReference cellReference = getStartCellInRange(names.get(0).getName());
+			Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
+			Row headerRow = workSheet.getRow(cellReference.getRow());
+			//int startRow = cellReference.getRow();
+			Row r = null; 
+			int startRow = workSheet.getLastRowNum(); 
+			int maxrows = names.stream().mapToInt(p-> p.getValues().size()).max().getAsInt();
+			//System.out.println(">>> write-cols " + names);
+
+			for (int index = 0; index < maxrows; index++) {
+
+				r = workSheet.createRow(++startRow); // .getRow(++startRow); 
+
+				//if (r != null) {
+
+					for(NameMappingBean val : names) {		
+
+						if (index < val.getValues().size()) {
+					
+							Name namedCell = workbook.getName(val.getName()); 
+							CellReference cellsref = new CellReference(namedCell.getRefersToFormula());
+							Cell c = r.createCell(cellsref.getCol());
+							CellStyle cs = headerRow.getCell(cellsref.getCol()).getCellStyle();  
+							c.setCellStyle(cs);
+							c.setCellValue((String) val.getValues().get(index));		
+						}			
+					}
+				//}
+			}
+		} catch (Exception e) {
+			throw e;
+		}
+	} 
+
 	*/
 }

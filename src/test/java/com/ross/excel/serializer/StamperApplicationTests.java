@@ -40,7 +40,7 @@ class StamperApplicationTests {
 			List<String> names = Arrays.asList(strArray);
 			List<NameMappingBean> beans = getTestNamedMappingBeans(names, 50);
 			stamperApp.getWorkbookFromFileInput(fileLocation);
-			stamperApp.writeToNamedCols2(stamperApp.getWorkbookNames(beans));
+			stamperApp.writeToNamedCols(stamperApp.getWorkbookNames(beans));
 			stamperApp.writeXlsxFile(writeFileLocation);
 			
 		} catch (Exception e) {
@@ -56,7 +56,7 @@ class StamperApplicationTests {
 			stamperApp.getWorkbookFromFileInput(readFileLocation);
 			String[] strArray = {"color","test","label","size","ross","dds","vpn","typeofbuy","department","category","ponumber"};
 			List<String> names = Arrays.asList(strArray);
-			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.getJsonFromNamedCols2(stamperApp.getNames(names));
+			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.getFromNamedCols(stamperApp.getNames(names));
 
 			for(String val : strArray) 
 				if (nmb.get(val) != null) 
@@ -108,7 +108,7 @@ class StamperApplicationTests {
 	public void testReadXlsReflectionBeans() {
 		try {
 			List<Object> domesticUploadList = 
-				stamperApp.getJsonFromNamedCols2(DomesticStandardUploadTemplate.class);
+				stamperApp.getReflectFromNamedCols(DomesticStandardUploadTemplate.class);
 			DomesticStandardUploadTemplate domesticUploadBean = 
 				(DomesticStandardUploadTemplate) domesticUploadList.get(0);
 
