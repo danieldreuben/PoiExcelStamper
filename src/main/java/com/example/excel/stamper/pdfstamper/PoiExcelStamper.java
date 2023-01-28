@@ -1,8 +1,9 @@
 package com.example.excel.stamper.pdfstamper;
 
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import com.example.excel.stamper.mapper.NameMappingBean;
@@ -28,13 +29,14 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 @Component
 public class PoiExcelStamper  {
-	//String fileLocation = "Test Domestic Standard Upload Template.xlsx";
+
 	Workbook workbook = null;
 
 	public PoiExcelStamper() {
@@ -50,12 +52,13 @@ public class PoiExcelStamper  {
 	public Hashtable<String, NameMappingBean> getJsonFromNamedCols2(List<String> names) {
 
 		if (names.size() == 0) return null;
+		//List<String> names = getWorkbookNames(cnames);
 
 		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 
 		for(String val : names) {
 				
-			CellReference cellsref = getNamedCell(val);				
+			CellReference cellsref = getStartCellInRange(val);				
 			Sheet workSheet = workbook.getSheet(cellsref.getSheetName());
 			int startRow = cellsref.getRow();
 			Row r = workSheet.getRow(++startRow);
@@ -108,7 +111,7 @@ public class PoiExcelStamper  {
 
 				for(String val : names) {
 				
-					CellReference cellsref = getNamedCell(val);				
+					CellReference cellsref = getStartCellInRange(val);				
 					Cell c = r.getCell(cellsref.getCol()); 
 					
 					NameMappingBean nmb = (cols.get(val) != null) ? cols.get(val) : new NameMappingBean(val); 
@@ -146,15 +149,15 @@ public class PoiExcelStamper  {
 
 			for(NameMappingBean val : names) {	
 
-				CellReference cellReference = getNamedCell(val.getName());
+				CellReference cellReference = getStartCellInRange(val.getName());
 				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
 				Row headerRow = workSheet.getRow(cellReference.getRow());
 				int startRow = headerRow.getRowNum()+1;
 				int existRows = workSheet.getLastRowNum(); 
 				
-				for (int index = 0; index < val.getValues().size(); index++) {
+				for (int index = 0, max = val.getValues().size(); index < max; index++) {
 
-					Row r = (startRow < existRows ? workSheet.getRow(startRow++) : workSheet.createRow(startRow++));
+					Row r = (startRow < existRows ? workSheet.getRow(startRow++) : workSheet.createRow(startRow++));					
 					Cell c = r.createCell(cellReference.getCol());
 					CellStyle cs = headerRow.getCell(cellReference.getCol()).getCellStyle();  					
 					c.setCellStyle(cs);
@@ -179,7 +182,7 @@ public class PoiExcelStamper  {
 
 		try {
 
-			CellReference cellReference = getNamedCell(names.get(0).getName());
+			CellReference cellReference = getStartCellInRange(names.get(0).getName());
 			Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
 			Row headerRow = workSheet.getRow(cellReference.getRow());
 			//int startRow = cellReference.getRow();
@@ -199,7 +202,6 @@ public class PoiExcelStamper  {
 						if (index < val.getValues().size()) {
 					
 							Name namedCell = workbook.getName(val.getName()); 
-
 							CellReference cellsref = new CellReference(namedCell.getRefersToFormula());
 							Cell c = r.createCell(cellsref.getCol());
 							CellStyle cs = headerRow.getCell(cellsref.getCol()).getCellStyle();  
@@ -249,8 +251,35 @@ public class PoiExcelStamper  {
 	private CellReference getNamedCell(String name) {
 		Name aNamedCell = workbook.getName(name); 
 		String ref = aNamedCell.getRefersToFormula();
+		//System.out.println(">>> named cell formula: " + ref);
 		return ref.contains(":") ? 
 			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
+	}
+
+	// @method getNamedCellInRange
+	// names in workbooks refer to single cell / ranges, convert named cell to AreaReference to 
+	// identify cells within the range. Generally, start reads / writes after last cell in the range. 
+	// Range cannot be contiguious to mark blocks so restricting to 10. This method assumes name is 
+	// present in the workbook 
+	// @param a workbook named cell / range 
+	// @return last cell in valid range  
+	//
+	private CellReference getStartCellInRange (String name) {
+		
+		CellReference ref = null;
+
+		try {
+			Name namedCellIdx = workbook.getName(name);         			
+			AreaReference aref = new AreaReference(namedCellIdx.getRefersToFormula(), workbook.getSpreadsheetVersion());         
+			//System.out.println(">>> aref : " + aref.getFirstCell() + " :: " + aref.getLastCell());
+			ref = aref.getLastCell(); 
+			if (aref.isWholeColumnReference() == true || aref.getAllReferencedCells().length > 10) 
+				throw new Exception("Cannot have range marker > 10 ..");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return ref;
 	}
 
 	// @method getWorkbookFromFileInput 
@@ -280,8 +309,11 @@ public class PoiExcelStamper  {
 		}
 	}
 
+
+/* 
+	
 	// @method getJsonFromNamedCols 
-	// java reflection example dynamically generates mapping class and invokes setters (incomplete) 
+	// java reflection example dynamically generates mapping class and invokes setters 
 	// 
 	// @param mappingBeanClass a java bean class with name setters / getters 
 	// @return a list of mappingBeanClass rows 
@@ -314,97 +346,6 @@ public class PoiExcelStamper  {
 		}
 		return names;
 	}
-
-	public List<NameMappingBean> getTestNamedMappingBeans(List<String> names, int max) {
-
-		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
-
-		for(String val : names) {	
-			int random = (int) (java.lang.Math.random() * max + 1); 
-			List<String> cells = new ArrayList<String>();
-
-			for (int i = 0; i < random; i++) {
-				cells.add(val.substring(0, 3)+":"+i);
-			}
-			beans.add(new NameMappingBean(val, cells));
-		}
-
-		return beans;
-	}
-/* 
-	public void handleExcelFile(String cellName) throws Exception {
-
-		String cellLocation = cellName;
-		Object cellValue = new Object();
-
-		try {
-
-			// get named cell	
-			
-			Name aNamedCell = workbook.getName(cellLocation);         
-			System.out.println(">>> get named cell " + aNamedCell.getRefersToFormula() + " named-cell-value " + aNamedCell.getNameName());
-					
-			// named cell props (row / col / val)
-
-			//String ref = aNamedCell.getRefersToFormula().substring(0, aNamedCell.getRefersToFormula().indexOf(":")); //"Sheet1!$D$4";
-			String ref = aNamedCell.getRefersToFormula(); 
-			CellReference cellReference = new CellReference(ref);
-			Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
-			Row row = workSheet.getRow(cellReference.getRow());
-			int col = cellReference.getCol();
-			Cell cell = row.getCell(cellReference.getCol());
-			
-			System.out.println( ">>> col-row-val " + cellReference.getCol() + "-" + cellReference.getRow() + "-" + cell.getStringCellValue()); 
-
-			// get named col data 
-
-			int startRow = cellReference.getRow();
-			Row r = null; 
-
-			do {
-				r =  workSheet.getRow(++startRow); 
-
-				if (r != null) {
-
-					Cell c = r.getCell(col); 
-
-					switch (c.getCellType()) {
-						case NUMERIC:
-							System.out.print(c.getNumericCellValue());
-							continue;
-						case STRING:
-							System.out.print(c.getStringCellValue());
-							continue;
-						case BLANK:
-					    case _NONE:
-						case ERROR:
-							break;
-					} 					
-				} 
-			} while (r != null);
-
-			//workbook.close();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-        return;
-	}
-		
-	
-	public CellStyle createWarningColor() {
-        CellStyle style = workbook.createCellStyle();
-        Font font = workbook.createFont();
-        font.setFontName("Courier New");
-        font.setBold(false);
-        //font.setUnderline(Font.U_SINGLE);
-        //font.setColor(org.apache.poi.hssf.util.HSSFColorPredefined.DARK_RED.getIndex());
-        style.setFont(font);
-        style.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
-        style.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.CENTER); 
-		return style;
-	}	
 	
 	*/
 }
