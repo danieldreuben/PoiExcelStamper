@@ -35,11 +35,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 @Component
-public class NamesSerializer  {
+public class ExcelNamesAdapter  {
 
 	Workbook workbook = null;
 
-	public NamesSerializer() {
+	public ExcelNamesAdapter() {
 	}
 
 	// @method getFromNamedCols
@@ -56,7 +56,7 @@ public class NamesSerializer  {
 		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 
 		for(String val : names) {
-							
+
 			CellReference cellsref = getLastCellInRange(val);				
 			Sheet workSheet = workbook.getSheet(cellsref.getSheetName());
 			int startRow = cellsref.getRow();
@@ -108,15 +108,27 @@ public class NamesSerializer  {
 					Row r = (++startRow < existRows ? 
 							workSheet.getRow(startRow) : workSheet.createRow(startRow));					
 					Cell c = r.createCell(cellReference.getCol()); 	
-					CellStyle cs = workSheet.getColumnStyle(cellReference.getCol());				
-					c.setCellStyle(cs);
+					//CellStyle cs = workSheet.getColumnStyle(cellReference.getCol());				
+					c.setCellStyle(resolveCellStyle(workSheet, cellReference.getCol()));
 					c.setCellValue((String) val.getValues().get(index));	
+					//System.out.print(val + " " + val.getValues().get(index));
 				}
 			}
 		} catch (Exception e) {
 			throw e;
 		}
 	} 
+
+	// @method resolveCellStyle 
+	// resolves cell style for a given worksheet / column. Determine if style is 
+	// applied at column level before using worksheet default 
+	// @param worksheet / col to reolve
+	// @return resolved style 
+	//	
+	private CellStyle resolveCellStyle(Sheet workSheet, int col) {
+		CellStyle cs = workSheet.getColumnStyle(col);
+		return (cs == null) ? workbook.getCellStyleAt(0) : cs;
+	}
 
 	// @method getNames 
 	// checks name in workbook

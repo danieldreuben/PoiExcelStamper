@@ -5,9 +5,9 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 import com.ross.excel.serializer.StamperApplication;
-import com.ross.excel.serializer.naming.NamesSerializer;
-import com.ross.excel.serializer.mapper.DomesticStandardUploadTemplate;
+import com.ross.excel.serializer.naming.ExcelNamesAdapter;
 import com.ross.excel.serializer.mapper.NameMappingBean;
+//import com.ross.excel.serializer.mapper.DomesticStandardUploadTemplate;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ class StamperApplicationTests {
 	String readFileLocation = "Y-" + fileLocation;
 
 	@Autowired
-    private NamesSerializer stamperApp;
+    private ExcelNamesAdapter stamperApp;
 
 	@Test
 	void contextLoads() {
