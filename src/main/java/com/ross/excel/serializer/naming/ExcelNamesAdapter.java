@@ -55,7 +55,8 @@ public class ExcelNamesAdapter  {
 
 		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 
-		for(String val : names) {
+		//for(String val : names) {
+		names.forEach( (val) -> { 	
 
 			CellReference cellsref = getLastCellInRange(val);				
 			Sheet workSheet = workbook.getSheet(cellsref.getSheetName());
@@ -81,94 +82,99 @@ public class ExcelNamesAdapter  {
 				} 
 			}
 			cols.put(val, nmb);   
-		}	
+		});	
 
 		return cols;
 	} 
 
+    // @method writeWithinRange
+	// writes named beans into an named range. NameMappingBean name correlates to an excel range
+	// @param names a list of mapper beans to write
+	//
+	private void writeWithinRange(NameMappingBean bean) {
+		try {
+
+				AreaReference ar = getAreaReference(bean.getName());
+				CellReference[] allCells = ar.getAllReferencedCells();
+				int beanval = 0;
+
+				for (CellReference cellRef : allCells) {
+
+					int startRow = cellRef.getRow();
+					Sheet workSheet = workbook.getSheet(cellRef.getSheetName());
+					int existRows = workSheet.getLastRowNum(); 
+
+					Row r = (startRow < existRows ? 
+							workSheet.getRow(startRow++) : workSheet.createRow(startRow++));					
+					Cell c = r.createCell(cellRef.getCol()); 	
+					CellStyle cs = workSheet.getColumnStyle(cellRef.getCol()) == null ?
+							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellRef.getCol());		
+					c.setCellStyle(cs);
+					c.setCellValue((String) bean.getValues().get(beanval++));
+				}
+
+		} catch (Exception e) {
+			throw e;
+		}		
+	}
+
 	// @method writeToNamedCols
-	// writes list of named beans to a worksheet (by col) 
-	// <p>
+	// writes named beans relative to a named cell / range (MappingBean name correlates to an excel range). 
+	// Range in this case name is used to determine the starting cell position.  
+	// positional property.
 	// @param names a list of mapper beans to write
 
-	public void writeToNamedCols(List<NameMappingBean> names) 
+	public void writeRelativeLocation(List<NameMappingBean> names) 
+	
 		throws Exception {
 
 		try {
-
-			for(NameMappingBean val : names) {	
+			names.forEach( (val) -> { 	
 
 				CellReference cellReference = getLastCellInRange(val.getName());
 				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
 				int startRow = cellReference.getRow();
 				int existRows = workSheet.getLastRowNum(); 
+				int max = val.getValues().size();
 				
-				for (int index = 0, max = val.getValues().size(); index < max; index++) {
+				for (int index = 0; index < max; index++) {
 
 					Row r = (++startRow < existRows ? 
 							workSheet.getRow(startRow) : workSheet.createRow(startRow));					
 					Cell c = r.createCell(cellReference.getCol()); 	
-					//CellStyle cs = workSheet.getColumnStyle(cellReference.getCol());				
-					c.setCellStyle(resolveCellStyle(workSheet, cellReference.getCol()));
+					CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
+							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());		
+					c.setCellStyle(cs);
 					c.setCellValue((String) val.getValues().get(index));	
-					//System.out.print(val + " " + val.getValues().get(index));
 				}
-			}
+			});
 		} catch (Exception e) {
 			throw e;
 		}
 	} 
-
-	// @method resolveCellStyle 
-	// resolves cell style for a given worksheet / column. Determine if style is 
-	// applied at column level before using worksheet default 
-	// @param worksheet / col to reolve
-	// @return resolved style 
-	//	
-	private CellStyle resolveCellStyle(Sheet workSheet, int col) {
-		CellStyle cs = workSheet.getColumnStyle(col);
-		return (cs == null) ? workbook.getCellStyleAt(0) : cs;
-	}
-
-	// @method getNames 
-	// checks name in workbook
-	// @param names a list of names to check within the workbook
-	// @return a list of names present within the workbook 
+	// @method createLookups
+	// method adds a lookup sheet and writes nmbs to cols (a-z max 26 lookups currently)
 	//
-	public List<String> getNames(List<String> names) {
-		List<String> present = new ArrayList<String>();		
-		
-		for(String val : names){
-			if (workbook.getName(val) != null)
-				present.add(val); 
+	public boolean createLookups(String sheetName, Boolean hidden, List<NameMappingBean> beans) {
+		try {
+			Sheet ws = workbook.createSheet(sheetName);
+			char col = 'A';
+			
+			for (NameMappingBean val : beans) {
+				Name name = workbook.createName();
+				name.setNameName(val.getName());
+				String range = "'"+sheetName+"'!$"+col+"$1:$"+col+"$"+(val.getValues().size()-1);
+				//System.out.println("range : " + val.getName() + ": " + range);
+				name.setRefersToFormula(range);
+				writeWithinRange(val);
+				++col;
+			}
+			workbook.setSheetHidden(workbook.getSheetIndex(sheetName), true);
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return present;
-	} 
-
-	// @method getWorkbookNames 
-	// checks mapping beans (names) presence in workbook 
-	// @param names a list of mapping beans to check within the workbook
-	// @return a list of names present within the workbook 
-	//
-	public List<NameMappingBean> getWorkbookNames(List<NameMappingBean> beans) {
-		List<NameMappingBean> present = new ArrayList<NameMappingBean>();		
-		
-		for(NameMappingBean val : beans) {
-			if (workbook.getName(val.getName()) != null)
-				present.add(val); 
-		}
-		return present;
-	} 
-
-	// @method getNamedCell 
-	// @return a cell reference for the named cell
-	//
-	private CellReference getNamedCell(String name) {
-		Name aNamedCell = workbook.getName(name); 
-		String ref = aNamedCell.getRefersToFormula();
-		//System.out.println(">>> named cell formula: " + ref);
-		return ref.contains(":") ? 
-			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
+		return true;
 	}
 
 	// @method getNamedCellInRange
@@ -197,6 +203,65 @@ public class ExcelNamesAdapter  {
 			throw new RuntimeException(e);
 		}
 		return ref;
+	}	
+
+	// @method getAreaReference 
+	// An AreaReference provides a read / write container 
+	// @param name a name of a range 
+	// @return area reference instance 
+	//
+	private AreaReference getAreaReference(String name) {
+		AreaReference aref = null;
+
+		try {
+			Name namedCellIdx = workbook.getName(name);         			
+			aref = new AreaReference(namedCellIdx.getRefersToFormula(), workbook.getSpreadsheetVersion());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return aref;		
+	}
+
+	// @method getNames 
+	// checks name in workbook
+	// @param names a list of names to check within the workbook
+	// @return a list of names present within the workbook 
+	//
+	public List<String> getNames(List<String> names) {
+		List<String> present = new ArrayList<String>();		
+		
+		//for(String val : names){
+		names.forEach( (val) -> { 
+			if (workbook.getName(val) != null)
+				present.add(val); 
+		});
+		return present;
+	} 
+
+	// @method getWorkbookNames 
+	// checks mapping beans (names) presence in workbook 
+	// @param names a list of mapping beans to check within the workbook
+	// @return a list of names present within the workbook 
+	//
+	public List<NameMappingBean> getWorkbookNames(List<NameMappingBean> beans) {
+		List<NameMappingBean> present = new ArrayList<NameMappingBean>();		
+		beans.forEach( (val) -> { 
+		//for(NameMappingBean val : beans) {
+			if (workbook.getName(val.getName()) != null)
+				present.add(val); 
+		});
+		return present;
+	} 
+
+	// @method getNamedCell 
+	// @return a cell reference for the named cell
+	//
+	private CellReference getNamedCell(String name) {
+		Name aNamedCell = workbook.getName(name); 
+		String ref = aNamedCell.getRefersToFormula();
+		//System.out.println(">>> named cell formula: " + ref);
+		return ref.contains(":") ? 
+			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
 	}
 
 	// @method getWorkbookFromFileInput 
