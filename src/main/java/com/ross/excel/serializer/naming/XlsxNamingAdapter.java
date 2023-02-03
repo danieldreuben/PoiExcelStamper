@@ -1,6 +1,5 @@
 package com.ross.excel.serializer.naming;
 
-
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -35,11 +34,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 @Component
-public class ExcelNamesAdapter  {
-
+public class XlsxNamingAdapter  {
 	Workbook workbook = null;
 
-	public ExcelNamesAdapter() {
+	public XlsxNamingAdapter() {
 	}
 
 	// @method getFromNamedCols
@@ -47,7 +45,7 @@ public class ExcelNamesAdapter  {
 	// <p>
 	// @param names a list of named columns to read
 	// @return a hashtable of mapped bean values
-
+	//
 	public Hashtable<String, NameMappingBean> getFromNamedCols(List<String> names) {
 
 		if (names.size() == 0) return null;
@@ -55,7 +53,6 @@ public class ExcelNamesAdapter  {
 
 		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 
-		//for(String val : names) {
 		names.forEach( (val) -> { 	
 
 			CellReference cellsref = getLastCellInRange(val);				
@@ -109,7 +106,6 @@ public class ExcelNamesAdapter  {
 					CellStyle cs = workSheet.getColumnStyle(cellRef.getCol()) == null ?
 							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellRef.getCol());		
 					c.setCellStyle(cs);
-					//c.setCellValue((String) bean.getValues().get(beanval++));
 					setCellFromBeanType(c, bean.getValues().get(beanval++));
 				}
 		} catch (Exception e) {
@@ -122,7 +118,7 @@ public class ExcelNamesAdapter  {
 	// Range in this case name is used to determine the starting cell position.  
 	// positional property.
 	// @param names a list of mapper beans to write
-
+	//
 	public void writeRelativeLocation(List<NameMappingBean> names) 
 	
 		throws Exception {
@@ -144,9 +140,7 @@ public class ExcelNamesAdapter  {
 					CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
 							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());		
 					c.setCellStyle(cs);
-					//c.setCellValue((String) val.getValues().get(index));	
 					setCellFromBeanType(c, val.getValues().get(index));
-					//System.out.print(">>ctype " + c.getCellType() + " ");
 				}
 			});
 		} catch (Exception e) {
@@ -156,7 +150,7 @@ public class ExcelNamesAdapter  {
 
 	// @method setCellWithType
 	// sets cell using bean type  
-		
+	//	
 	private static void setCellFromBeanType(Cell c, Object val) {
 
 		if (val instanceof String)
@@ -172,6 +166,7 @@ public class ExcelNamesAdapter  {
 	// method adds a lookup sheet and writes nmbs to cols (iterates a-z cols so max 26 lookups currently)
 	//
 	public boolean createLookups(String sheetName, Boolean hidden, List<NameMappingBean> beans) {
+
 		try {
 			Sheet ws = workbook.createSheet(sheetName);
 			char col = 'A';
@@ -194,11 +189,9 @@ public class ExcelNamesAdapter  {
 	}
 
 	// @method getNamedCellInRange
-	// <p>
-	// names in workbook may refer to single cell / ranges, this method converts either to AreaReference 
-	// and returns last cell. Generally, start reads / writes after last cell in the range. 
-	// Range is considered a marker in this case (restricting to 10). Assumes name is 
-	// present in the workbook 
+	// names in workbook may refer to single / muulti-cell, this method returns last cell. 
+	// Generally, reads / write is done after last cell in the range (this may  be improved by allowing adjustment)
+	// Restricting marker ranges to 10 cells).  
 	// @param a workbook named cell / range 
 	// @return last cell in valid range  
 	//
@@ -207,10 +200,11 @@ public class ExcelNamesAdapter  {
 		CellReference ref = null;
 
 		try {
+
 			Name namedCellIdx = workbook.getName(name);         			
 			AreaReference aref = new AreaReference(namedCellIdx.getRefersToFormula(), workbook.getSpreadsheetVersion());         
-			//System.out.println(">>> aref : " + aref.getFirstCell() + " :: " + aref.getLastCell());
 			ref = aref.getLastCell(); 
+
 			if (aref.isWholeColumnReference() == true || aref.getAllReferencedCells().length > 10
 				|| aref.getLastCell().getCol() != aref.getFirstCell().getCol()) 
 				throw new Exception("Invalid marker range-name [must be single col range , < 10 cells]");
@@ -227,6 +221,7 @@ public class ExcelNamesAdapter  {
 	// @return area reference instance 
 	//
 	private AreaReference getAreaReference(String name) {
+
 		AreaReference aref = null;
 
 		try {
@@ -244,9 +239,9 @@ public class ExcelNamesAdapter  {
 	// @return a list of names present within the workbook 
 	//
 	public List<String> getNames(List<String> names) {
+
 		List<String> present = new ArrayList<String>();		
-		
-		//for(String val : names){
+
 		names.forEach( (val) -> { 
 			if (workbook.getName(val) != null)
 				present.add(val); 
@@ -260,9 +255,10 @@ public class ExcelNamesAdapter  {
 	// @return a list of names present within the workbook 
 	//
 	public List<NameMappingBean> getWorkbookNames(List<NameMappingBean> beans) {
+
 		List<NameMappingBean> present = new ArrayList<NameMappingBean>();		
+		
 		beans.forEach( (val) -> { 
-		//for(NameMappingBean val : beans) {
 			if (workbook.getName(val.getName()) != null)
 				present.add(val); 
 		});
@@ -273,6 +269,7 @@ public class ExcelNamesAdapter  {
 	// @return a cell reference for the named cell
 	//
 	private CellReference getNamedCell(String name) {
+
 		Name aNamedCell = workbook.getName(name); 
 		String ref = aNamedCell.getRefersToFormula();
 		//System.out.println(">>> named cell formula: " + ref);
@@ -282,7 +279,7 @@ public class ExcelNamesAdapter  {
 
 	// @method getWorkbookFromFileInput 
 	// gets workbook from file location (used here for testing only) 
-	// <p>
+	// 
 	public Workbook getWorkbookFromFileInput(String fileLocation) {
 
 		try {
@@ -298,6 +295,7 @@ public class ExcelNamesAdapter  {
 	}	
 
 	public void writeXlsxFile(String filename) throws Exception {
+
 		try {
 			FileOutputStream out = new FileOutputStream(new File(filename));
 			workbook.write(out);
@@ -307,11 +305,15 @@ public class ExcelNamesAdapter  {
 		}
 	}
 
+
+/* 
+	
+
 	// @method getReflectFromNamedCols 
 	// java reflection example dynamically generates mapping class and invokes setters 
-	// 
 	// @param mappingBeanClass a java bean class with name setters / getters 
 	// @return a list of mappingBeanClass rows 
+	//	
 	public List<Object>  getReflectFromNamedCols(Class mappingBeanClass) {
 		List<Object> names = null;
 
@@ -327,7 +329,8 @@ public class ExcelNamesAdapter  {
 				String propName = pds[i].getName();
 
 				if (propName.compareTo("class") != 0) {
-					String setter = "set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+					String setter = "set" + propName.substring(0, 1).toUpperCase() + 
+										propName.substring(1);
 					java.beans.Statement stmt = new java.beans.Statement(mapperbean, setter, new Object[]{"My Prop Value"});
 					stmt.execute();
 					//System.out.println(">>setter " + setter);
@@ -341,105 +344,7 @@ public class ExcelNamesAdapter  {
 		return names;
 	}
 
-/* 
-	
 
-	
-	// @method getJsonFromNamedCols 
-	// reads list of named fields from a worksheet (by row)
-	// it assumes all subsequent cols in names are in the same worksheet as first  
-	// <p>
-	// @param names a list of named columns to read
-	// @return a hashtable of mapped bean values
-
-	public Hashtable<String, NameMappingBean> getFromNamedCols(List<String> names) {
-
-		if (names.size() == 0) return null;
-
-		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
-		CellReference cellReference = getNamedCell(names.get(0));
-		Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
-		int startRow = cellReference.getRow();
-		Row r = null; 
-
-		do {
-			r =  workSheet.getRow(++startRow); 
-
-			if (r != null) {
-
-				for(String val : names) {
-				
-					CellReference cellsref = getStartCellInRange(val);				
-					Cell c = r.getCell(cellsref.getCol()); 
-					
-					NameMappingBean nmb = (cols.get(val) != null) ? cols.get(val) : new NameMappingBean(val); 
-					cols.put(val, nmb);
-
-					if (c != null)
-					switch (c.getCellType()) {
-						case NUMERIC:
-							nmb.setValue(c.getNumericCellValue());
-							continue;
-						case STRING:
-							nmb.setValue(c.getStringCellValue());
-							continue;
-						case BLANK:
-						case _NONE:
-						case ERROR:
-							break;
-					} 			
-				}		
-			} 
-		} while (r != null);
-
-		return cols;
-	} 
-
-		// @method writeToNamedCols 
-	// reads list of named fields from a worksheet (by row)
-	// it assumes all subsequent cols in names are in the same worksheet as first  
-	// <p>
-	// @param names a list of named columns to read
-	// @return a json doc
-
-	public void writeToNamedCols(List<NameMappingBean> names) 
-		throws Exception {
-
-		try {
-
-			CellReference cellReference = getStartCellInRange(names.get(0).getName());
-			Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
-			Row headerRow = workSheet.getRow(cellReference.getRow());
-			//int startRow = cellReference.getRow();
-			Row r = null; 
-			int startRow = workSheet.getLastRowNum(); 
-			int maxrows = names.stream().mapToInt(p-> p.getValues().size()).max().getAsInt();
-			//System.out.println(">>> write-cols " + names);
-
-			for (int index = 0; index < maxrows; index++) {
-
-				r = workSheet.createRow(++startRow); // .getRow(++startRow); 
-
-				//if (r != null) {
-
-					for(NameMappingBean val : names) {		
-
-						if (index < val.getValues().size()) {
-					
-							Name namedCell = workbook.getName(val.getName()); 
-							CellReference cellsref = new CellReference(namedCell.getRefersToFormula());
-							Cell c = r.createCell(cellsref.getCol());
-							CellStyle cs = headerRow.getCell(cellsref.getCol()).getCellStyle();  
-							c.setCellStyle(cs);
-							c.setCellValue((String) val.getValues().get(index));		
-						}			
-					}
-				//}
-			}
-		} catch (Exception e) {
-			throw e;
-		}
-	} 
 
 	*/
 }

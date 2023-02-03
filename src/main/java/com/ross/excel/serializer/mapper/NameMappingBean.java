@@ -40,7 +40,7 @@ public class NameMappingBean  {
             else if (o instanceof Double)
                 this.add((Double) o);  
             else if (o instanceof Integer)
-                this.add((Integer) o);                             
+                this.add((Integer) o);    
         }
     }
 
@@ -57,9 +57,9 @@ public class NameMappingBean  {
     }
 
     public String toString() {
-        
+
         String s = getName() + ":" + getValues().toString();
-        return (s.length() > 80 ? s.substring(0,80) + " ..." : s);
+        return (s.length() > 100 ? s.substring(0,100) + " ..." : s);
     }
-    
+
 }
