@@ -3,6 +3,9 @@ package com.ross.excel.serializer;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.function.Consumer;
+
+import java.lang.Math;
 
 import com.ross.excel.serializer.StamperApplication;
 import com.ross.excel.serializer.mapper.NameMappingBean;
@@ -39,13 +42,13 @@ class StamperApplicationTests {
 	
 	@Test
 	@Order(1) 
-	public void testWriteMulticols() {
+	public void testWriteRelativeRange() {
 		try {
 			System.out.println(">>> Writing test beans..");
 			String[] strArray = {"color","style","department","size","typeofbuy","material","weight",
 									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
 			List<String> names = Arrays.asList(strArray);
-			List<NameMappingBean> beans = getTestNamedMappingBeans(names, 50);
+			List<NameMappingBean> beans = getTestMappingBeans(names, 100);
 			stamperApp.getWorkbookFromFileInput(fileLocation);
 			stamperApp.writeRelativeLocation(stamperApp.getWorkbookNames(beans));
 			stamperApp.writeXlsxFile(writeFileLocation);
@@ -76,7 +79,7 @@ class StamperApplicationTests {
 
 	@Test
 	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void testReadMulticols() {
+	public void testReadRelaiveRange() {
 		try {
 			stamperApp.getWorkbookFromFileInput(readFileLocation);
 			String[] strArray = {"color","test","label","size","ross","dds","vpn","weight","typeofbuy","department","category","ponumber"};
@@ -112,6 +115,34 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+	// @getTestMappingBeans
+	// generates set of test beans with randomized type
+	// 
+	public List<NameMappingBean> getTestMappingBeans(List<String> names, int max) {
+
+		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
+		
+		names.forEach( (val) -> { 
+			beans.add(new NameMappingBean(val));
+		});
+
+		Consumer<NameMappingBean> methodbean = (n) -> { 
+			boolean switcher = java.lang.Math.random() > 0.6;
+
+			for (int i = 0; i < (int) (Math.random() * max); i++) {
+				if (switcher) 
+					n.add( ( Math.random()) * max );
+				else 
+					n.add( n.getName().substring(0,3) + ":" + i );				
+			}
+		};
+		beans.forEach(methodbean);
+		return beans;
+	}
+
+	interface AddItemFunction {
+		Object run(int n, int m);
+	}	
 
 	public List<NameMappingBean> getTestLookups() {
 		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
@@ -148,37 +179,7 @@ class StamperApplicationTests {
 
 		return beans;
 	}
-
-	public List<NameMappingBean> getTestNamedMappingBeans(List<String> names, int max) {
-
-		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
-
-		for(String val : names) {	
-			
-			int random = (int) (java.lang.Math.random() * max + 1); 
-
-			if (java.lang.Math.random() < 0.5) {
-				List<String> list = new ArrayList<String>();
-
-				for (int i = 0; i < random; i++) {
-					list.add(val.substring(0, 3)+":"+i);
-				}
-				NameMappingBean nmb = new NameMappingBean(val, list);
-				beans.add(nmb);			
-			} else {
-				List<Double> list = new ArrayList<Double>();
-
-				for (int i = 0; i < random; i++) {
-					list.add(Double.valueOf(i+1+java.lang.Math.random()));
-				}
-				NameMappingBean nmb = new NameMappingBean(val, list);
-				beans.add(nmb);			
-			}
-
-
-		}
-		return beans;
-	}
+	  
 
 	// reflection example works, needs mapping to xlsx read but unlikely runtime efficient
 /* 

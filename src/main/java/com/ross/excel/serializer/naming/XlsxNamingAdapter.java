@@ -73,9 +73,10 @@ public class XlsxNamingAdapter  {
 						nmb.add(c.getStringCellValue());
 						continue;
 					case BLANK:
-					case _NONE:
+					case _NONE:				
 					case ERROR:
-						break;
+						nmb.add("");
+						continue;						
 				} 
 			}
 			cols.put(val, nmb);   
@@ -93,7 +94,7 @@ public class XlsxNamingAdapter  {
 				AreaReference ar = getAreaReference(bean.getName());
 				CellReference[] allCells = ar.getAllReferencedCells();
 				int beanval = 0;
-
+				
 				for (CellReference cellRef : allCells) {
 
 					int startRow = cellRef.getRow();
@@ -131,7 +132,7 @@ public class XlsxNamingAdapter  {
 				int startRow = cellReference.getRow();
 				int existRows = workSheet.getLastRowNum(); 
 				int max = val.getValues().size();
-				
+
 				for (int index = 0; index < max; index++) {
 
 					Row r = (++startRow < existRows ? 
