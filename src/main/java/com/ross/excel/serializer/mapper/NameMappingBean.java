@@ -6,8 +6,7 @@ import java.util.ArrayList;
 public class NameMappingBean  {
 
     private String name; 
-    private String type;
-    private List<String> values = new ArrayList<String>();
+    private List<Object> values = new ArrayList<Object>();
 
     public NameMappingBean() {
     }
@@ -16,9 +15,9 @@ public class NameMappingBean  {
         this.name = name;
     }
   
-    public NameMappingBean(String name, List<String> values) {
+    public NameMappingBean(String name, List<? extends Object> vals) {
         this.name = name;
-        this.values = values;
+        setValues(vals);
     }
 
     public String getName() {
@@ -29,32 +28,38 @@ public class NameMappingBean  {
         this.name = name;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public List<String> getValues() {
+    public List<Object> getValues() {
         return values;
     }
 
-    public void setValues(List<String> values) {
-        this.values = values;
+    private void setValues(List<? extends Object> vals) {
+
+        for (Object o : vals) { 
+            if (o instanceof String)
+                this.add((String) o);
+            else if (o instanceof Double)
+                this.add((Double) o);  
+            else if (o instanceof Integer)
+                this.add((Integer) o);                             
+        }
     }
 
-    public void setValue(String value) {
+    public void add(String value) {
         this.values.add(value);
     }
     
-    public void setValue(double value) {
-        this.values.add(String.valueOf(value));
+    public void add(Double value) {
+        this.values.add(value);
+    }
+
+    public void add(Integer value) {
+        this.values.add(value);
     }
 
     public String toString() {
-        return getName() + ":" + getValues().toString();
+        
+        String s = getName() + ":" + getValues().toString();
+        return (s.length() > 80 ? s.substring(0,80) + " ..." : s);
     }
     
 }

@@ -70,10 +70,10 @@ public class ExcelNamesAdapter  {
 				if (c != null)
 				switch (c.getCellType()) {
 					case NUMERIC:
-						nmb.setValue(c.getNumericCellValue());
+						nmb.add(c.getNumericCellValue());
 						continue;
 					case STRING:
-						nmb.setValue(c.getStringCellValue());
+						nmb.add(c.getStringCellValue());
 						continue;
 					case BLANK:
 					case _NONE:
@@ -93,7 +93,6 @@ public class ExcelNamesAdapter  {
 	//
 	private void writeWithinRange(NameMappingBean bean) {
 		try {
-
 				AreaReference ar = getAreaReference(bean.getName());
 				CellReference[] allCells = ar.getAllReferencedCells();
 				int beanval = 0;
@@ -110,15 +109,15 @@ public class ExcelNamesAdapter  {
 					CellStyle cs = workSheet.getColumnStyle(cellRef.getCol()) == null ?
 							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellRef.getCol());		
 					c.setCellStyle(cs);
-					c.setCellValue((String) bean.getValues().get(beanval++));
+					//c.setCellValue((String) bean.getValues().get(beanval++));
+					setCellFromBeanType(c, bean.getValues().get(beanval++));
 				}
-
 		} catch (Exception e) {
 			throw e;
 		}		
 	}
 
-	// @method writeToNamedCols
+	// @method writeRelativeLocation
 	// writes named beans relative to a named cell / range (MappingBean name correlates to an excel range). 
 	// Range in this case name is used to determine the starting cell position.  
 	// positional property.
@@ -145,15 +144,32 @@ public class ExcelNamesAdapter  {
 					CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
 							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());		
 					c.setCellStyle(cs);
-					c.setCellValue((String) val.getValues().get(index));	
+					//c.setCellValue((String) val.getValues().get(index));	
+					setCellFromBeanType(c, val.getValues().get(index));
+					//System.out.print(">>ctype " + c.getCellType() + " ");
 				}
 			});
 		} catch (Exception e) {
 			throw e;
 		}
 	} 
+
+	// @method setCellWithType
+	// sets cell using bean type  
+		
+	private static void setCellFromBeanType(Cell c, Object val) {
+
+		if (val instanceof String)
+			c.setCellValue((String) val);
+		else if (val instanceof Double)
+			c.setCellValue((Double) val);
+		else if (val instanceof Integer)
+			c.setCellValue((Integer) val);  		
+	}
+
+
 	// @method createLookups
-	// method adds a lookup sheet and writes nmbs to cols (a-z max 26 lookups currently)
+	// method adds a lookup sheet and writes nmbs to cols (iterates a-z cols so max 26 lookups currently)
 	//
 	public boolean createLookups(String sheetName, Boolean hidden, List<NameMappingBean> beans) {
 		try {

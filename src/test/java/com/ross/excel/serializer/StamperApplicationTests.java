@@ -89,7 +89,7 @@ class StamperApplicationTests {
 			beans.add(depts);
 
 			List<String> labels = Arrays.asList(new String[]{"Lauren Ralph Lauren","Polo Ralph Lauren","Ralph Lauren","Nike Golf"," Nike Swim"," Nike Air"," Jordan/Nike Air",
-				" Home Essentials"," Madden"," Madden Girl"});
+				"Home Essentials"," Madden"," Madden Girl"});
 			NameMappingBean label = new NameMappingBean("label_lookup", labels);
 			beans.add(label);
 
@@ -100,6 +100,10 @@ class StamperApplicationTests {
 			List<String> typeofbuys = Arrays.asList(new String[]{"Upfront","Closeout","Piece Goods​"});
 			NameMappingBean typeofbuy = new NameMappingBean("typeofbuy_lookup", typeofbuys);
 			beans.add(typeofbuy);
+
+			List<Double> test_doubles = Arrays.asList(new Double[]{0.021,100.3,9.275,100000.734});
+			NameMappingBean test_double = new NameMappingBean("test_doubles_lookup",test_doubles);
+			beans.add(test_double);					
 
 			stamperApp.getWorkbookFromFileInput(fileLocation);
 			stamperApp.createLookups("domestic upload tmpt lookups", true, beans);
@@ -132,13 +136,28 @@ class StamperApplicationTests {
 		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
 
 		for(String val : names) {	
+			
 			int random = (int) (java.lang.Math.random() * max + 1); 
-			List<String> cells = new ArrayList<String>();
 
-			for (int i = 0; i < random; i++) {
-				cells.add(val.substring(0, 3)+":"+i);
+			if (java.lang.Math.random() < 0.5) {
+				List<String> list = new ArrayList<String>();
+
+				for (int i = 0; i < random; i++) {
+					list.add(val.substring(0, 3)+":"+i);
+				}
+				NameMappingBean nmb = new NameMappingBean(val, list);
+				beans.add(nmb);			
+			} else {
+				List<Double> list = new ArrayList<Double>();
+
+				for (int i = 0; i < random; i++) {
+					list.add(Double.valueOf(i+1));
+				}
+				NameMappingBean nmb = new NameMappingBean(val, list);
+				beans.add(nmb);			
 			}
-			beans.add(new NameMappingBean(val, cells));
+
+
 		}
 
 		return beans;
