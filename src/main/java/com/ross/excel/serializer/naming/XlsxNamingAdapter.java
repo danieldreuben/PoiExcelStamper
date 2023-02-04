@@ -40,13 +40,40 @@ public class XlsxNamingAdapter  {
 	public XlsxNamingAdapter() {
 	}
 
-	// @method getFromNamedCols
+	// @method readWithinRange
+	// reads from a named range. 
+	// @param name of range
+	// @return NameMappingBean range content 
+	//
+	public NameMappingBean readWithinRange(String name) {
+
+		NameMappingBean nmb = null;
+
+		try {
+				AreaReference ar = getAreaReference(name);
+				CellReference[] allCells = ar.getAllReferencedCells();
+				nmb = new NameMappingBean(name); 
+
+				for (CellReference cellRef : allCells) {
+
+					Sheet workSheet = workbook.getSheet(cellRef.getSheetName());
+					Row r = workSheet.getRow(cellRef.getRow());			
+					Cell c = r.getCell(cellRef.getCol()); 
+					nmb.add(getCellConent(c));					
+				}
+		} catch (Exception e) {
+			throw e;
+		}		
+		return nmb;
+	}
+
+	// @method readFromNamedCols
 	// reads list of named fields from a worksheet (by col)
 	// <p>
 	// @param names a list of named columns to read
 	// @return a hashtable of mapped bean values
 	//
-	public Hashtable<String, NameMappingBean> getFromNamedCols(List<String> names) {
+	public Hashtable<String, NameMappingBean> readFromNamedCols(List<String> names) {
 
 		if (names.size() == 0) return null;
 		//List<String> names = getWorkbookNames(cnames);
@@ -63,21 +90,7 @@ public class XlsxNamingAdapter  {
 
 			for (; r != null; r = workSheet.getRow(++startRow)) {
 				Cell c = r.getCell(cellsref.getCol()); 
-				
-				if (c != null)
-				switch (c.getCellType()) {
-					case NUMERIC:
-						nmb.add(c.getNumericCellValue());
-						continue;
-					case STRING:
-						nmb.add(c.getStringCellValue());
-						continue;
-					case BLANK:
-					case _NONE:				
-					case ERROR:
-						nmb.add("");
-						continue;						
-				} 
+				nmb.add(getCellConent(c));					
 			}
 			cols.put(val, nmb);   
 		});	
@@ -99,10 +112,8 @@ public class XlsxNamingAdapter  {
 
 					int startRow = cellRef.getRow();
 					Sheet workSheet = workbook.getSheet(cellRef.getSheetName());
-					int existRows = workSheet.getLastRowNum(); 
-
-					Row r = (startRow < existRows ? 
-							workSheet.getRow(startRow++) : workSheet.createRow(startRow++));					
+					Row r = (workSheet.getRow(startRow) != null ? 
+							workSheet.getRow(startRow++) : workSheet.createRow(startRow++));											
 					Cell c = r.createCell(cellRef.getCol()); 	
 					CellStyle cs = workSheet.getColumnStyle(cellRef.getCol()) == null ?
 							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellRef.getCol());		
@@ -130,27 +141,31 @@ public class XlsxNamingAdapter  {
 				CellReference cellReference = getLastCellInRange(val.getName());
 				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
 				int startRow = cellReference.getRow();
-				int existRows = workSheet.getLastRowNum(); 
 				int max = val.getValues().size();
 
-				for (int index = 0; index < max; index++) {
+				for (int index = 0; index < max; startRow++, index++) {
 
-					Row r = (++startRow < existRows ? 
-							workSheet.getRow(startRow) : workSheet.createRow(startRow));					
-					Cell c = r.createCell(cellReference.getCol()); 	
-					CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
-							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());		
-					c.setCellStyle(cs);
-					setCellFromBeanType(c, val.getValues().get(index));
+					Row r = (workSheet.getRow(startRow) != null ? 
+							workSheet.getRow(startRow) : workSheet.createRow(startRow));	
+					
+					if (r != null) {
+						Cell c = r.createCell(cellReference.getCol()); 	
+						CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
+								workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());	
+										
+						c.setCellStyle(cs);
+						setCellFromBeanType(c, val.getValues().get(index));
+					}
 				}
 			});
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw e;
 		}
 	} 
 
 	// @method setCellWithType
-	// sets cell using bean type  
+	// sets cell type from bean value type  
 	//	
 	private static void setCellFromBeanType(Cell c, Object val) {
 
@@ -162,6 +177,26 @@ public class XlsxNamingAdapter  {
 			c.setCellValue((Integer) val);  		
 	}
 
+	// @method getCellConent
+	// gets typed cell content   
+	//		
+	private static Object getCellConent(Cell c) {
+		Object res = null;
+		if (c != null)
+			switch (c.getCellType()) {
+				case NUMERIC:
+					res = c.getNumericCellValue();
+					break;
+				case STRING:
+					res = c.getStringCellValue();
+					break;
+				case BLANK:
+				case _NONE:				
+				case ERROR:
+					res = "";						
+			} 	
+		return res;
+	}	
 
 	// @method createLookups
 	// method adds a lookup sheet and writes nmbs to cols (iterates a-z cols so max 26 lookups currently)

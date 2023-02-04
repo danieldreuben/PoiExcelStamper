@@ -35,14 +35,18 @@ public class NameMappingBean  {
     private void setValues(List<? extends Object> vals) {
 
         for (Object o : vals) { 
-            if (o instanceof String)
-                this.add((String) o);
-            else if (o instanceof Double)
-                this.add((Double) o);  
-            else if (o instanceof Integer)
-                this.add((Integer) o);    
+            add(o);
         }
     }
+
+    public void add(Object o) {
+        if (o instanceof String)
+            this.add((String) o);
+        else if (o instanceof Double)
+            this.add((Double) o);  
+        else if (o instanceof Integer)
+            this.add((Integer) o);
+    }   
 
     public void add(String value) {
         this.values.add(value);

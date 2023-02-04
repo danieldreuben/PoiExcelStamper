@@ -28,7 +28,7 @@ import java.beans.Transient;
 @SpringBootTest
 @TestMethodOrder(OrderAnnotation.class)
 class StamperApplicationTests {
-	String fileLocation = "Domestic Standard Upload Tmplt.xlsx";	
+	String fileLocation = "Domestic Standard Upload Template.xlsx";	
 	String writeFileLocation = "W-" + fileLocation;
 	String readFileLocation = "L-" + fileLocation;
 	String lookupFileLocation = "L-" + fileLocation; 
@@ -45,7 +45,7 @@ class StamperApplicationTests {
 	public void testWriteRelativeRange() {
 		try {
 			System.out.println(">>> Writing test beans..");
-			String[] strArray = {"color","style","department","size","typeofbuy","material","weight",
+			String[] strArray = {"color","style","department","size","typeofbuy","material","weight","cornertest",
 									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
 			List<String> names = Arrays.asList(strArray);
 			List<NameMappingBean> beans = getTestMappingBeans(names, 100);
@@ -76,6 +76,21 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+	@Test
+	@Order(10)
+	public void testReadFromRange() {
+		try {
+			stamperApp.getWorkbookFromFileInput(readFileLocation);
+			System.out.println(">>> reading named ranges..");
+			NameMappingBean nmb = stamperApp.readWithinRange("testreadrange");
+			System.out.println(nmb);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue(false);
+		}
+		assertTrue(true);
+	}
 
 	@Test
 	@Order(Ordered.LOWEST_PRECEDENCE)
@@ -84,7 +99,7 @@ class StamperApplicationTests {
 			stamperApp.getWorkbookFromFileInput(readFileLocation);
 			String[] strArray = {"color","test","label","size","ross","dds","vpn","weight","typeofbuy","department","category","ponumber"};
 			List<String> names = Arrays.asList(strArray);
-			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.getFromNamedCols(stamperApp.getNames(names));
+			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.readFromNamedCols(stamperApp.getNames(names));
 			
 			System.out.println(">>> reading named ranges..");
 
@@ -129,11 +144,11 @@ class StamperApplicationTests {
 		Consumer<NameMappingBean> methodbean = (n) -> { 
 			boolean switcher = java.lang.Math.random() > 0.6;
 
-			for (int i = 0; i < (int) (Math.random() * max); i++) {
+			for (int i = 0; i < (int) ((0.1 + Math.random()) * max); i++) {
 				if (switcher) 
-					n.add( ( Math.random()) * max );
+					n.add((Math.random()) * max);
 				else 
-					n.add( n.getName().substring(0,3) + ":" + i );				
+					n.add(n.getName().substring(0,3) + ":" + i);				
 			}
 		};
 		beans.forEach(methodbean);
@@ -151,16 +166,16 @@ class StamperApplicationTests {
 		NameMappingBean cl = new NameMappingBean("color_lookup", names);
 		beans.add(cl);
 		List<String> suppliers = Arrays.asList(new String[]{"201650 - Enchante Accessories, Inc","326461 - NIKE INC", 
-			"326852 - NIKE SHOES", "43391058 - White Mountain", "496464 - POLO BY RALPH LAUREN HOSIERY","43432102 - Conair LLC ",
+			"326852 - NIKE SHOES", "43391058 - White Mountain", "496464 - POLO BY RALPH LAUREN HOSIERY","43432102 - Conair LLC",
 			"43391270 - ADIDAS ", "43423298 - UNDER ARMOUR","43405653 - Revman International Inc.", "43397382 - POLO RALPH LAUREN"});
 		NameMappingBean supps = new NameMappingBean("supplier_lookup", suppliers);
 		beans.add(supps);
-		List<String> departments = Arrays.asList(new String[]{"LADIES HOSIERY"," MISSY HVYWT"," PLUS MS LTWT SLPWR"," Mens Slippers",
-			"Boys Shoes","BEAUTY","FRAGRANCES","WELLNESS","Ladies Athletic","WINDOW TREATMENTS "});
+		List<String> departments = Arrays.asList(new String[]{"LADIES HOSIERY","MISSY HVYWT","PLUS MS LTWT SLPWR","Mens Slippers",
+			"Boys Shoes","BEAUTY","FRAGRANCES","WELLNESS","Ladies Athletic","WINDOW TREATMENTS"});
 		NameMappingBean depts = new NameMappingBean("department_lookup", departments);
 		beans.add(depts);
 
-		List<String> labels = Arrays.asList(new String[]{"Lauren Ralph Lauren","Polo Ralph Lauren","Ralph Lauren","Nike Golf"," Nike Swim"," Nike Air"," Jordan/Nike Air",
+		List<String> labels = Arrays.asList(new String[]{"Lauren Ralph Lauren","Polo Ralph Lauren","Ralph Lauren","Nike Golf","Nike Swim"," Nike Air"," Jordan/Nike Air",
 			"Home Essentials"," Madden"," Madden Girl"});
 		NameMappingBean label = new NameMappingBean("label_lookup", labels);
 		beans.add(label);
