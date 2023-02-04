@@ -3,6 +3,7 @@ package com.ross.excel.serializer;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.function.Consumer;
 
 import java.lang.Math;
@@ -28,10 +29,11 @@ import java.beans.Transient;
 @SpringBootTest
 @TestMethodOrder(OrderAnnotation.class)
 class StamperApplicationTests {
+
 	String fileLocation = "Domestic Standard Upload Template.xlsx";	
 	String writeFileLocation = "W-" + fileLocation;
-	String readFileLocation = "L-" + fileLocation;
-	String lookupFileLocation = "L-" + fileLocation; 
+	String readFileLocation = "W-" + fileLocation;
+	String lookupFileLocation = "W-" + fileLocation; 
 
 	@Autowired
     private XlsxNamingAdapter stamperApp;
@@ -44,14 +46,16 @@ class StamperApplicationTests {
 	@Order(1) 
 	public void testWriteRelativeRange() {
 		try {
+			
 			System.out.println(">>> Writing test beans..");
-			String[] strArray = {"color","style","department","size","typeofbuy","material","weight","cornertest",
-									"vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
+			String[] strArray = {"color","style","department","size","typeofbuy","material",
+					"weight","cornertest","$$$","vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
 			List<String> names = Arrays.asList(strArray);
 			List<NameMappingBean> beans = getTestMappingBeans(names, 100);
-			stamperApp.getWorkbookFromFileInput(fileLocation);
-			stamperApp.writeRelativeLocation(stamperApp.getWorkbookNames(beans));
-			stamperApp.writeXlsxFile(writeFileLocation);
+
+			stamperApp.getWorkbookFromFile(fileLocation);
+			stamperApp.writeRelativeToRange(stamperApp.getWorkbookNames(beans));
+			stamperApp.writeWorkbookToFile(writeFileLocation);
 			
 		} catch (Exception e) {
 			assertTrue(false);
@@ -60,14 +64,33 @@ class StamperApplicationTests {
 	}
 
 	@Test
-	@Order(2) 
-	public void testWriteLookups() {
+	@Order(2)
+	public void testWriteWithinRange() {
 		try {
-			System.out.println(">>> Write lookup ranges..");			
-			stamperApp.getWorkbookFromFileInput(writeFileLocation);
+			System.out.println(">>> write to named range");			
+			stamperApp.getWorkbookFromFile(writeFileLocation);
+			String[] strArray = {"testreadrange"};
+			List<String> names = Arrays.asList(strArray);			
+			List<NameMappingBean> beans = getTestMappingBeans(names, 50);			
+			stamperApp.writeWithinRange(beans);
+			stamperApp.writeWorkbookToFile(writeFileLocation);			
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue(false);
+		}
+		assertTrue(true);
+	}
+
+	@Test
+	@Order(3) 
+	public void testWriteLookups() {
+		try {		
+			System.out.println(">>> Write lookup range");				
+			stamperApp.getWorkbookFromFile(writeFileLocation);
 			List<NameMappingBean> beans = getTestLookups();
 			stamperApp.createLookups("domestic upload tmpt lookups", true, beans);
-			stamperApp.writeXlsxFile(lookupFileLocation);
+			stamperApp.writeWorkbookToFile(lookupFileLocation);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -80,8 +103,8 @@ class StamperApplicationTests {
 	@Order(10)
 	public void testReadFromRange() {
 		try {
-			stamperApp.getWorkbookFromFileInput(readFileLocation);
-			System.out.println(">>> reading named ranges..");
+			System.out.println(">>> read from named ranges");		
+			stamperApp.getWorkbookFromFile(readFileLocation);
 			NameMappingBean nmb = stamperApp.readWithinRange("testreadrange");
 			System.out.println(nmb);
 
@@ -96,16 +119,16 @@ class StamperApplicationTests {
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void testReadRelaiveRange() {
 		try {
-			stamperApp.getWorkbookFromFileInput(readFileLocation);
-			String[] strArray = {"color","test","label","size","ross","dds","vpn","weight","typeofbuy","department","category","ponumber"};
+			System.out.println(">>> read-relative named range..");			
+			stamperApp.getWorkbookFromFile(readFileLocation);
+			String[] strArray = {"color","test","label","size","ross","dds","vpn","weight","typeofbuy",
+				"department","category","ponumber"};
 			List<String> names = Arrays.asList(strArray);
-			java.util.Hashtable<String, NameMappingBean> nmb = stamperApp.readFromNamedCols(stamperApp.getNames(names));
-			
-			System.out.println(">>> reading named ranges..");
+			Hashtable<String, NameMappingBean> nmb = stamperApp.readRelativeToRange(stamperApp.getNames(names));			
 
-			for(String val : strArray) 
-				if (nmb.get(val) != null) 
-					System.out.println("results : " + nmb.get(val));
+			names.forEach( (val) -> { 
+				System.out.println(val + " : " + nmb.get(val));
+			});
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -121,9 +144,11 @@ class StamperApplicationTests {
 	@Order(5)
 	public void testNames() {
 		try {
-			String[] strArray = {"color","test","label","abcd","ross","dds","vpn","$$$","typeofbuy","department","supplierid","category","vendorstyledescription"};
+			String[] strArray = {"color","test","label","abcd","ross","dds","vpn","$$$","typeofbuy",
+				"department","supplierid","category","vendorstyledescription"};
 			List<String> names = Arrays.asList(strArray);
 			System.out.println(">>> names present in workbook: " + stamperApp.getNames(names));
+
 		} catch (Exception e) {
 			assertTrue(false);
 		}
@@ -165,11 +190,13 @@ class StamperApplicationTests {
 		List<String> names = Arrays.asList(new String[]{"red","white","blue","pink","orange","black","green"});
 		NameMappingBean cl = new NameMappingBean("color_lookup", names);
 		beans.add(cl);
+		
 		List<String> suppliers = Arrays.asList(new String[]{"201650 - Enchante Accessories, Inc","326461 - NIKE INC", 
 			"326852 - NIKE SHOES", "43391058 - White Mountain", "496464 - POLO BY RALPH LAUREN HOSIERY","43432102 - Conair LLC",
 			"43391270 - ADIDAS ", "43423298 - UNDER ARMOUR","43405653 - Revman International Inc.", "43397382 - POLO RALPH LAUREN"});
 		NameMappingBean supps = new NameMappingBean("supplier_lookup", suppliers);
 		beans.add(supps);
+		
 		List<String> departments = Arrays.asList(new String[]{"LADIES HOSIERY","MISSY HVYWT","PLUS MS LTWT SLPWR","Mens Slippers",
 			"Boys Shoes","BEAUTY","FRAGRANCES","WELLNESS","Ladies Athletic","WINDOW TREATMENTS"});
 		NameMappingBean depts = new NameMappingBean("department_lookup", departments);
