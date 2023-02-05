@@ -9,7 +9,6 @@ import com.ross.excel.serializer.mapper.NameMappingBean;
 
 import org.springframework.stereotype.Component;
 
-//import java.nio.channels.ClosedSelectorException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.File;
@@ -244,9 +243,11 @@ public class XlsxNamingAdapter  {
 			char col = 'A';
 			
 			for (NameMappingBean val : beans) {
+
 				Name name = workbook.createName();
 				name.setNameName(val.getName());
-				String range = "'"+sheetName+"'!$"+col+"$1:$"+col+"$"+(val.getValues().size()-1);
+				int numitems = val.getValues().size()-1;
+				String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
 				//System.out.println("range : " + val.getName() + ": " + range);
 				name.setRefersToFormula(range);
 				writeWithinRange(val);
@@ -341,8 +342,8 @@ public class XlsxNamingAdapter  {
 			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
 	}
 
-	// @method getWorkbookFromFileInput 
-	// gets workbook from file location (used here for testing only) 
+	// @method getWorkbookFromFile
+	// gets workbook from file location 
 	// 
 
 	public Workbook getWorkbookFromFile(String fileLocation) {
@@ -358,6 +359,10 @@ public class XlsxNamingAdapter  {
 		}
 		return workbook;
 	}	
+
+	// @method writeWorkbookToFile
+	// writes workbook to file  
+	// 
 
 	public void writeWorkbookToFile(String filename) throws Exception {
 
@@ -379,7 +384,7 @@ public class XlsxNamingAdapter  {
 	// @param mappingBeanClass a java bean class with name setters / getters 
 	// @return a list of mappingBeanClass rows 
 	//	
-	
+
 	public List<Object>  getReflectFromNamedCols(Class mappingBeanClass) {
 		List<Object> names = null;
 

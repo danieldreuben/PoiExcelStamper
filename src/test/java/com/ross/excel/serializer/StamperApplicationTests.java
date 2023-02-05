@@ -30,10 +30,18 @@ import java.beans.Transient;
 @TestMethodOrder(OrderAnnotation.class)
 class StamperApplicationTests {
 
-	String fileLocation = "Domestic Standard Upload Template.xlsx";	
-	String writeFileLocation = "W-" + fileLocation;
-	String readFileLocation = "W-" + fileLocation;
-	String lookupFileLocation = "W-" + fileLocation; 
+	String fname = "Domestic Standard Upload Template";
+
+	String fileLocation = String.format("%s.xlsx", fname); 
+	String writeFileLocation = String.format("W-%s", fileLocation);
+	String readFileLocation = String.format("W-%s", fileLocation);
+	String lookupFileLocation = String.format("W-%s", fileLocation);
+
+	String[] mixedArray = {"color","style","department","size","typeofbuy","material",
+		"weight","cornertest", "$$$","vpn","supplierid","category","vendorstyledescription",
+			"label","class","ponumber"
+	};
+	List<String> mixofnames = Arrays.asList(mixedArray);	
 
 	@Autowired
     private XlsxNamingAdapter stamperApp;
@@ -41,6 +49,9 @@ class StamperApplicationTests {
 	@Test
 	void contextLoads() {
 	}
+
+	// writes set of mapping beans to named ranges   
+	//
 	
 	@Test
 	@Order(1) 
@@ -48,11 +59,7 @@ class StamperApplicationTests {
 		try {
 			
 			System.out.println(">>> Writing test beans..");
-			String[] strArray = {"color","style","department","size","typeofbuy","material",
-					"weight","cornertest","$$$","vpn","supplierid","category","vendorstyledescription","label","class","ponumber"};
-			List<String> names = Arrays.asList(strArray);
-			List<NameMappingBean> beans = getTestMappingBeans(names, 100);
-
+			List<NameMappingBean> beans = getTestMappingBeans(mixofnames, 100);
 			stamperApp.getWorkbookFromFile(fileLocation);
 			stamperApp.writeRelativeToRange(stamperApp.getWorkbookNames(beans));
 			stamperApp.writeWorkbookToFile(writeFileLocation);
@@ -62,12 +69,15 @@ class StamperApplicationTests {
 		}
 		assertTrue(true);
 	}
+	// wries bean content within a range 
+	//
 
 	@Test
 	@Order(2)
 	public void testWriteWithinRange() {
 		try {
-			System.out.println(">>> write to named range");			
+			
+			System.out.println(">>> write to named range");		
 			stamperApp.getWorkbookFromFile(writeFileLocation);
 			String[] strArray = {"testreadrange"};
 			List<String> names = Arrays.asList(strArray);			
@@ -82,11 +92,15 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+	// creates new sheet and writes lookup data by name
+	//
+
 	@Test
 	@Order(3) 
 	public void testWriteLookups() {
 		try {		
-			System.out.println(">>> Write lookup range");				
+			
+			System.out.println(">>> Write lookup range");	
 			stamperApp.getWorkbookFromFile(writeFileLocation);
 			List<NameMappingBean> beans = getTestLookups();
 			stamperApp.createLookups("domestic upload tmpt lookups", true, beans);
@@ -99,11 +113,15 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+	// reads spreadsheet content from within a ranges 
+	//
+
 	@Test
 	@Order(10)
 	public void testReadFromRange() {
 		try {
-			System.out.println(">>> read from named ranges");		
+			
+			System.out.println(">>> read named ranges");		
 			stamperApp.getWorkbookFromFile(readFileLocation);
 			NameMappingBean nmb = stamperApp.readWithinRange("testreadrange");
 			System.out.println(nmb);
@@ -115,19 +133,23 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+
+	// reads spreadsheet content from set of ranges into mapping bean
+	//
+
 	@Test
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void testReadRelaiveRange() {
 		try {
-			System.out.println(">>> read-relative named range..");			
+			
+			System.out.println(">>> read-relative named range..");	
 			stamperApp.getWorkbookFromFile(readFileLocation);
-			String[] strArray = {"color","test","label","size","ross","dds","vpn","weight","typeofbuy",
-				"department","category","ponumber"};
-			List<String> names = Arrays.asList(strArray);
-			Hashtable<String, NameMappingBean> nmb = stamperApp.readRelativeToRange(stamperApp.getNames(names));			
+			Hashtable<String, NameMappingBean> nmb = 
+				stamperApp.readRelativeToRange(stamperApp.getNames(mixofnames));			
 
-			names.forEach( (val) -> { 
-				System.out.println(val + " : " + nmb.get(val));
+			mixofnames.forEach( (val) -> { 
+
+				System.out.println(String.format("%s : %s", val, nmb.get(val)));
 			});
 
 		} catch (Exception e) {
@@ -143,11 +165,10 @@ class StamperApplicationTests {
 	@Test
 	@Order(5)
 	public void testNames() {
+
 		try {
-			String[] strArray = {"color","test","label","abcd","ross","dds","vpn","$$$","typeofbuy",
-				"department","supplierid","category","vendorstyledescription"};
-			List<String> names = Arrays.asList(strArray);
-			System.out.println(">>> names present in workbook: " + stamperApp.getNames(names));
+
+			System.out.println(">>> names present in workbook: " + stamperApp.getNames(mixofnames));
 
 		} catch (Exception e) {
 			assertTrue(false);
@@ -158,6 +179,7 @@ class StamperApplicationTests {
 	// @getTestMappingBeans
 	// generates set of test beans with randomized type
 	// 
+
 	public List<NameMappingBean> getTestMappingBeans(List<String> names, int max) {
 
 		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();

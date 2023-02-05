@@ -12,23 +12,28 @@ public class NameMappingBean  {
     }
 
     public NameMappingBean(String name) {
+
         this.name = name;
     }
   
     public NameMappingBean(String name, List<? extends Object> vals) {
+
         this.name = name;
         setValues(vals);
     }
 
     public String getName() {
+
         return name;
     }
 
     public void setName(String name) {
+
         this.name = name;
     }
 
     public List<Object> getValues() {
+        
         return values;
     }
 
@@ -40,6 +45,7 @@ public class NameMappingBean  {
     }
 
     public void add(Object o) {
+
         if (o instanceof String)
             this.add((String) o);
         else if (o instanceof Double)
