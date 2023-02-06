@@ -181,8 +181,7 @@ public class XlsxNamingAdapter  {
 			names.forEach( (val) -> { 	
 
 				CellReference cellReference = getAreaReference(val.getName()).getLastCell();
-				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
-				CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellReference, val);				
+				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());				
 				int startRow = cellReference.getRow()+1;
 				int max = val.getValues().size();
 
@@ -191,7 +190,7 @@ public class XlsxNamingAdapter  {
 					Row r = (workSheet.getRow(startRow) != null ? 
 							workSheet.getRow(startRow) : workSheet.createRow(startRow));						
 					Cell c = r.createCell(cellReference.getCol()); 	
-
+					CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellReference, val);
 					setCellFromBeanType(c, cs, val.getValues().get(index));
 				}
 			});
@@ -213,7 +212,8 @@ public class XlsxNamingAdapter  {
 		if (val.getContentType() == contentTypes.DATE)	{
 			CreationHelper createHelper = workbook.getCreationHelper();  
 			CellStyle cellStyle = (XSSFCellStyle) workSheet.getWorkbook().createCellStyle();
-			cellStyle.cloneStyleFrom(cs);				
+			cellStyle.cloneStyleFrom(cs);	
+			//cellStyle.setDataFormat((short)14);			
 			cellStyle.setDataFormat(  
 				createHelper.createDataFormat().getFormat("d/m/yy"));  		
 			cs = cellStyle;						
@@ -271,7 +271,7 @@ public class XlsxNamingAdapter  {
 	// iterates a-z cols so max 26 lookups currently
 	//
 
-	public boolean createLookups(String sheetName, Boolean hidden, List<NameMappingBean> beans) {
+	public boolean addLookupsFromBeans(String sheetName, Boolean hidden, List<NameMappingBean> beans) {
 
 		try {
 			Sheet ws = workbook.createSheet(sheetName);
@@ -281,7 +281,7 @@ public class XlsxNamingAdapter  {
 
 				Name name = workbook.createName();
 				name.setNameName(val.getName());
-				int numitems = val.getValues().size()-1;
+				int numitems = val.getValues().size();
 				String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
 				//System.out.println("range : " + val.getName() + ": " + range);
 				name.setRefersToFormula(range);
@@ -303,7 +303,7 @@ public class XlsxNamingAdapter  {
 	// @return last cell in valid range  
 	//
 
-	private Boolean checkMarkerRange (AreaReference aref) throws RuntimeException {
+	private Boolean checkMarkerRange (AreaReference aref)  {
 		
 		if (aref.isWholeColumnReference() == true || aref.getAllReferencedCells().length > 10
 			|| aref.getLastCell().getCol() != aref.getFirstCell().getCol()) 
@@ -325,7 +325,7 @@ public class XlsxNamingAdapter  {
 			Name namedCellIdx = workbook.getName(name);         			
 			aref = new AreaReference(namedCellIdx.getRefersToFormula(), workbook.getSpreadsheetVersion());
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			//throw new RuntimeException(e);
 		}
 		return aref;		
 	}

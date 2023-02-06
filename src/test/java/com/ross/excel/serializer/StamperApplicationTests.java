@@ -32,9 +32,9 @@ import java.beans.Transient;
 @TestMethodOrder(OrderAnnotation.class)
 class StamperApplicationTests {
 
-	String fname = "Domestic Standard Upload Template";
+	String template = "Domestic Standard Upload Template";
 
-	String fileLocation = String.format("%s.xlsx", fname); 
+	String fileLocation = String.format("%s.xlsx", template); 
 	String writeFileLocation = String.format("W-%s", fileLocation);
 	String readFileLocation = String.format("W-%s", fileLocation);
 	String lookupFileLocation = String.format("W-%s", fileLocation);
@@ -84,7 +84,7 @@ class StamperApplicationTests {
 			stamperApp.getWorkbookFromFile(writeFileLocation);
 			String[] strArray = {"testreadrange"};
 			List<String> names = Arrays.asList(strArray);			
-			List<NameMappingBean> beans = getTestMappingBeans(names, 8);		
+			List<NameMappingBean> beans = XlsxNamingAdapter.getTestMappingBeans(names, 8);		
 
 			stamperApp.writeInRange(beans);
 			stamperApp.writeWorkbookToFile(writeFileLocation);			
@@ -104,10 +104,9 @@ class StamperApplicationTests {
 	public void testWriteLookups() {
 		try {		
 			
-			System.out.println(">>> Write lookup range");	
 			stamperApp.getWorkbookFromFile(writeFileLocation);
 			List<NameMappingBean> beans = getTestLookups();
-			stamperApp.createLookups("domestic upload tmpt lookups", true, beans);
+			stamperApp.addLookupsFromBeans("domestic upload tmpt lookups", true, beans);
 			stamperApp.writeWorkbookToFile(lookupFileLocation);
 			
 		} catch (Exception e) {
@@ -123,12 +122,10 @@ class StamperApplicationTests {
 	@Test
 	@Order(10)
 	public void testReadFromRange() {
-		try {
-			
-			System.out.println(">>> read named ranges");		
+		try {			
 			stamperApp.getWorkbookFromFile(readFileLocation);
 			NameMappingBean nmb = stamperApp.readFromRange("testreadrange");
-			System.out.println(nmb);
+			System.out.println(String.format(">>>read from range\n%s", nmb));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -147,7 +144,6 @@ class StamperApplicationTests {
 		try {
 			
 			System.out.println(">>> read-relative named range..");	
-
 			stamperApp.getWorkbookFromFile(readFileLocation);
 			Hashtable<String, NameMappingBean> nmb = 
 				stamperApp.readRelativeRange(stamperApp.getNames(mixofnames));			
@@ -172,7 +168,8 @@ class StamperApplicationTests {
 	public void testNames() {
 
 		try {
-			System.out.println(">>> names present in workbook: " + stamperApp.getNames(mixofnames));
+			System.out.println(">>> names present in workbook: " + 
+				stamperApp.getNames(mixofnames));
 
 		} catch (Exception e) {
 			assertTrue(false);
@@ -180,20 +177,7 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
-	// @getTestMappingBeans
-	// generates set of test beans with randomized type
-	// 
-	/*enum opts{
-		NUMBER, DATE, STRING;
-
-		public static opts getRandom()  {
-			//java.util.Random PRNG = new java.util.Random();
-			opts[] allopts = values();
-			int rand = (int) (Math.random() * allopts.length);			
-			return allopts[rand];
-		}		
-	};*/
-
+/* 
 	public List<NameMappingBean> getTestMappingBeans(List<String> names, int max) {
 
 		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
@@ -204,7 +188,6 @@ class StamperApplicationTests {
 
 		Consumer<NameMappingBean> methodbean = (n) -> { 
 
-			//opts random = opts.getRandom();
 			final NameMappingBean.contentTypes random = NameMappingBean.contentTypes.getRandom();
 			final Integer maximum = Integer.valueOf((int) ((0.1 + Math.random()) * max));
 
@@ -226,7 +209,7 @@ class StamperApplicationTests {
 		};
 		beans.forEach(methodbean);
 		return beans;
-	}
+	} */
 
 
 	public List<NameMappingBean> getTestLookups() {
