@@ -4,15 +4,16 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Date;
 
 import com.ross.excel.serializer.mapper.NameMappingBean;
+import com.ross.excel.serializer.mapper.NameMappingBean.contentTypes;
 
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.File;
-
 
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.AreaReference;
@@ -29,7 +30,13 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.BuiltinFormats;
+import org.apache.poi.ss.usermodel.CreationHelper; 
+
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 
 
 @Component
@@ -39,30 +46,30 @@ public class XlsxNamingAdapter  {
 	public XlsxNamingAdapter() {
 	}
 
-	// @method readWithinRange
+	// @method readFromRange
 	// reads from a named range. 
 	// @param name of range
 	// @return Hashtable of NameMappingBean
 	//
 
-	public Hashtable<String, NameMappingBean> readWithinRange(List<String> names) {
+	public Hashtable<String, NameMappingBean> readFromRange(List<String> names) {
 
 		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 
 		names.forEach( (val) -> { 	
-			cols.put(val, readWithinRange(val));
+			cols.put(val, readFromRange(val));
 		});
 
 		return cols;
 	}
 		
-	// @method readWithinRange
+	// @method readFromRange
 	// reads from a named range. 
 	// @param name of range
 	// @return NameMappingBean range content 
 	//
 
-	public NameMappingBean readWithinRange(String name) {
+	public NameMappingBean readFromRange(String name) {
 
 		NameMappingBean nmb = null;
 
@@ -88,16 +95,15 @@ public class XlsxNamingAdapter  {
 		return nmb;
 	}
 
-	// @method readRelativeToRange
+	// @method readRelativeRange
 	// reads list of named fields from a worksheet (by col)
 	// <p>
 	// @param names a list of named columns to read
 	// @return a hashtable of mapped bean values
 	//
 
-	public Hashtable<String, NameMappingBean> readRelativeToRange(List<String> names) {
+	public Hashtable<String, NameMappingBean> readRelativeRange(List<String> names) {
 
-		//if (names.size() == 0) return null;
 		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 
 		names.forEach( (val) -> { 	
@@ -118,24 +124,25 @@ public class XlsxNamingAdapter  {
 		return cols;
 	} 
 
-    // @method writeWithinRange
+    // @method writeInRange
 	// writes named beans into an named range. 
 	// @param names a list of mapping beans to write
 	//
 
-	public void writeWithinRange(List<NameMappingBean> names) {
+	public void writeInRange(List<NameMappingBean> names) {
 
 		names.forEach( (val) -> { 	
-			writeWithinRange(val);
+			writeInRange(val);
 		});
 	}
 
-    // @method writeWithinRange
+    // @method writeInRange
 	// writes named beans into an named range. NameMappingBean name correlates to an excel range
 	// @param names a mapper beans to write
 	//
 
-	public void writeWithinRange(NameMappingBean bean) {
+	public void writeInRange(NameMappingBean bean) {
+
 		try {
 				AreaReference ar = getAreaReference(bean.getName());
 				CellReference[] allCells = ar.getAllReferencedCells();
@@ -148,26 +155,25 @@ public class XlsxNamingAdapter  {
 					Row r = (workSheet.getRow(startRow) != null ? 
 							workSheet.getRow(startRow++) : workSheet.createRow(startRow++));											
 					Cell c = r.createCell(cellRef.getCol()); 	
-					CellStyle cs = workSheet.getColumnStyle(cellRef.getCol()) == null ?
-							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellRef.getCol());		
-					c.setCellStyle(cs);
-					if (bean.getValues().size() > nextval) 
-						setCellFromBeanType(c, bean.getValues().get(nextval++));
+					CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellRef, bean);	
+
+					setCellFromBeanType(c, cs, (bean.getValues().size() > nextval) ? 
+						bean.getValues().get(nextval++) : null);
 				}
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 
 			throw e;
 		}		
 	}
 
-	// @method writeRelativeToRange
+	// @method writeRelativeRange
 	// writes named beans relative to a named cell / range (MappingBean name correlates to an excel range). 
 	// Range in this case name is used to determine the starting cell position.  
 	// positional property.
 	// @param names a list of mapper beans to write
 	//
 
-	public void writeRelativeToRange(List<NameMappingBean> names) 
+	public void writeRelativeRange(List<NameMappingBean> names) 
 		throws Exception {
 
 		try {
@@ -175,6 +181,7 @@ public class XlsxNamingAdapter  {
 
 				CellReference cellReference = getAreaReference(val.getName()).getLastCell();
 				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());
+				CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellReference, val);				
 				int startRow = cellReference.getRow()+1;
 				int max = val.getValues().size();
 
@@ -183,30 +190,54 @@ public class XlsxNamingAdapter  {
 					Row r = (workSheet.getRow(startRow) != null ? 
 							workSheet.getRow(startRow) : workSheet.createRow(startRow));						
 					Cell c = r.createCell(cellReference.getCol()); 	
-					CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
-							workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());										
-					c.setCellStyle(cs);
-					setCellFromBeanType(c, val.getValues().get(index));
+
+					setCellFromBeanType(c, cs, val.getValues().get(index));
 				}
 			});
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 
 			throw e;
 		}
 	} 
 
+	// @method getDefaultOrCloneStyle
+	// Determines if cell should apply default or new  
+	//	
+
+	private CellStyle getDefaultOrCloneStyle(Sheet workSheet, CellReference cellReference, NameMappingBean val) {
+
+		CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
+			workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());	
+			
+		if (val.getContentType() == contentTypes.DATE)	{
+			CreationHelper createHelper = workbook.getCreationHelper();  
+			CellStyle cellStyle = (XSSFCellStyle) workSheet.getWorkbook().createCellStyle();
+			cellStyle.cloneStyleFrom(cs);				
+			cellStyle.setDataFormat(  
+				createHelper.createDataFormat().getFormat("d/m/yy"));  		
+			cs = cellStyle;						
+		}
+		return cs;
+	}
+
 	// @method setCellWithType
 	// sets cell type from bean value type  
 	//	
 
-	private static void setCellFromBeanType(Cell c, Object val) {
+	private void setCellFromBeanType(Cell c, CellStyle cs, Object val) {
 
-		if (val instanceof String)
+		if (val == null) 
+			c.setBlank();
+		else if (val instanceof String)
 			c.setCellValue((String) val);
 		else if (val instanceof Double)
 			c.setCellValue((Double) val);
 		else if (val instanceof Integer)
-			c.setCellValue((Integer) val);  		
+			c.setCellValue((Integer) val);  	
+		else if (val instanceof java.util.Date) {
+			c.setCellValue((java.util.Date) val);	
+		}  				
+		c.setCellStyle(cs);
 	}
 
 	// @method getCellConent
@@ -219,6 +250,9 @@ public class XlsxNamingAdapter  {
 			switch (c.getCellType()) {
 				case NUMERIC:
 					res = c.getNumericCellValue();
+					/*if(DateUtil.isCellDateFormatted(c)) {
+						res = c.getDateCellValue();
+					}	*/				
 					break;
 				case STRING:
 					res = c.getStringCellValue();
@@ -250,13 +284,13 @@ public class XlsxNamingAdapter  {
 				String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
 				//System.out.println("range : " + val.getName() + ": " + range);
 				name.setRefersToFormula(range);
-				writeWithinRange(val);
+				writeInRange(val);
 				++col;
 			}
 			workbook.setSheetHidden(workbook.getSheetIndex(sheetName), true);
 
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (RuntimeException e) {
+			throw e; // e.printStackTrace();
 		}
 		return true;
 	}
@@ -346,7 +380,8 @@ public class XlsxNamingAdapter  {
 	// gets workbook from file location 
 	// 
 
-	public Workbook getWorkbookFromFile(String fileLocation) {
+	public Workbook getWorkbookFromFile(String fileLocation) 
+		throws Exception {
 
 		try {
 			FileInputStream inputStream = new FileInputStream(new File(fileLocation));
@@ -355,7 +390,7 @@ public class XlsxNamingAdapter  {
 				.createFormulaEvaluator();
 
 		} catch (Exception e) {
-			e.printStackTrace();	
+			throw e; //e.printStackTrace();	
 		}
 		return workbook;
 	}	
