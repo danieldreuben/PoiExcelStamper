@@ -10,6 +10,7 @@ import java.lang.Math;
 
 import com.ross.excel.serializer.StamperApplication;
 import com.ross.excel.serializer.mapper.NameMappingBean;
+import com.ross.excel.serializer.mapper.NameMappingBean.contentTypes;;
 import com.ross.excel.serializer.naming.XlsxNamingAdapter;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,7 +61,7 @@ class StamperApplicationTests {
 		try {
 			
 			System.out.println(">>> Writing test beans..");
-			List<NameMappingBean> beans = getTestMappingBeans(mixofnames, 100);
+			List<NameMappingBean> beans = XlsxNamingAdapter.getTestMappingBeans(mixofnames, 100);
 
 			stamperApp.getWorkbookFromFile(fileLocation);
 			stamperApp.writeRelativeRange(stamperApp.getWorkbookNames(beans));
@@ -182,7 +183,7 @@ class StamperApplicationTests {
 	// @getTestMappingBeans
 	// generates set of test beans with randomized type
 	// 
-	enum opts{
+	/*enum opts{
 		NUMBER, DATE, STRING;
 
 		public static opts getRandom()  {
@@ -191,7 +192,7 @@ class StamperApplicationTests {
 			int rand = (int) (Math.random() * allopts.length);			
 			return allopts[rand];
 		}		
-	};
+	};*/
 
 	public List<NameMappingBean> getTestMappingBeans(List<String> names, int max) {
 
@@ -203,16 +204,22 @@ class StamperApplicationTests {
 
 		Consumer<NameMappingBean> methodbean = (n) -> { 
 
-			opts random = opts.getRandom();
-			Integer maximum = Integer.valueOf((int) ((0.1 + Math.random()) * max));
+			//opts random = opts.getRandom();
+			final NameMappingBean.contentTypes random = NameMappingBean.contentTypes.getRandom();
+			final Integer maximum = Integer.valueOf((int) ((0.1 + Math.random()) * max));
 
 			for (int i = 0; i < maximum; i++) {
-				if (random == opts.NUMBER) 
-					n.add((Math.random()) * max);
-				else if (random == opts.DATE) 
-					n.add(new java.util.Date());						
-				else if (random == opts.STRING) 
-					n.add(n.getName().substring(0,3) + ":" + i);	
+				switch (random) {
+					case NUMBER:
+						n.add((Math.random()) * max);
+						break;
+					case DATE:					
+						n.add(new java.util.Date());
+						break;
+					case MIXED:	// mixed not implemented 						
+					case STRING:					
+						n.add(n.getName().substring(0,3) + ":" + i);		
+				}							
 
 			}
 			//System.out.println(String.format("%s-%s : %s",n.getName(), random.ordinal(), n.getValues()));			

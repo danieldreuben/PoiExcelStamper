@@ -9,17 +9,17 @@ public class NameMappingBean  {
 
     private String name; 
     private List<Object> values = new ArrayList<Object>();
-    private contentTypes conentType = contentTypes.EMPTY; 
+    private contentTypes conentType = contentTypes.MIXED; 
 
 	public enum contentTypes {
-		EMPTY, MIXED, NUMBER, DATE, STRING;
+		MIXED, NUMBER, DATE, STRING;
 
 		public static contentTypes getRandom()  {
 			contentTypes[] allopts = values();
 			int rand = (int) (Math.random() * allopts.length);			
 			return allopts[rand];
 		}		
-	};    
+	};       
 
     public NameMappingBean() {
     }

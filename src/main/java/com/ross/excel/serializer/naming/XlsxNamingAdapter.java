@@ -1,10 +1,11 @@
 package com.ross.excel.serializer.naming;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Date;
+import java.util.function.Consumer;
 
 import com.ross.excel.serializer.mapper.NameMappingBean;
 import com.ross.excel.serializer.mapper.NameMappingBean.contentTypes;
@@ -375,6 +376,45 @@ public class XlsxNamingAdapter  {
 		return ref.contains(":") ? 
 			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
 	}
+
+	// @method getTestMappingBeans 
+	// Generates & fills randomly typed mapping beans 
+	// @param list of bean names to generate
+	// @param max beans to generate
+	// @return collection of randomly generated mapping beans
+
+	public static List<NameMappingBean> getTestMappingBeans(List<String> names, int max) {
+
+		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
+		
+		names.forEach( (val) -> { 
+			beans.add(new NameMappingBean(val));
+		});
+
+		Consumer<NameMappingBean> methodbean = (n) -> { 
+
+			final NameMappingBean.contentTypes random = NameMappingBean.contentTypes.getRandom();
+			final Integer maximum = Integer.valueOf((int) ((0.1 + Math.random()) * max));
+
+			for (int i = 0; i < maximum; i++) {
+				switch (random) {
+					case NUMBER:
+						n.add((Math.random()) * max);
+						break;
+					case DATE:					
+						n.add(new java.util.Date());
+						break;
+					case MIXED:	// mixed not implemented 						
+					case STRING:					
+						n.add(n.getName().substring(0,3) + ":" + i);		
+				}							
+
+			}
+			//System.out.println(String.format("%s-%s : %s",n.getName(), random.ordinal(), n.getValues()));			
+		};
+		beans.forEach(methodbean);
+		return beans;
+	} 	
 
 	// @method getWorkbookFromFile
 	// gets workbook from file location 
