@@ -213,9 +213,9 @@ public class XlsxNamingAdapter  {
 			CreationHelper createHelper = workbook.getCreationHelper();  
 			CellStyle cellStyle = (XSSFCellStyle) workSheet.getWorkbook().createCellStyle();
 			cellStyle.cloneStyleFrom(cs);	
-			//cellStyle.setDataFormat((short)14);			
-			cellStyle.setDataFormat(  
-				createHelper.createDataFormat().getFormat("d/m/yy"));  		
+		
+			//cellStyle.setDataFormat(  
+			//	createHelper.createDataFormat().getFormat("d/m/yy"));  		
 			cs = cellStyle;						
 		}
 		return cs;
@@ -393,20 +393,24 @@ public class XlsxNamingAdapter  {
 
 		Consumer<NameMappingBean> methodbean = (n) -> { 
 
-			final NameMappingBean.contentTypes random = NameMappingBean.contentTypes.getRandom();
-			final Integer maximum = Integer.valueOf((int) ((0.1 + Math.random()) * max));
+			List<contentTypes> includes = 
+				Arrays.asList(contentTypes.NUMBER, contentTypes.DATE, contentTypes.STRING);
+			final NameMappingBean.contentTypes random = NameMappingBean.contentTypes.getRandom(includes);
+			final Integer maximum = Integer.valueOf((int) ((Math.random()) * max + 1));
 
 			for (int i = 0; i < maximum; i++) {
+				
 				switch (random) {
-					case NUMBER:
+					case NUMBER:							
 						n.add((Math.random()) * max);
 						break;
 					case DATE:					
 						n.add(new java.util.Date());
-						break;
-					case MIXED:	// mixed not implemented 						
+						break;						
 					case STRING:					
-						n.add(n.getName().substring(0,3) + ":" + i);		
+						n.add(n.getName().substring(0,3) + ":" + i);	
+					case MIXED:	// 
+					case EMPTY: // EMPTY MIXED excluded
 				}							
 
 			}

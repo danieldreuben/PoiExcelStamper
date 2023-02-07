@@ -1,24 +1,41 @@
 package com.ross.excel.serializer.mapper;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.ArrayList;
-
 import java.util.Date;
 
 public class NameMappingBean  {
 
     private String name; 
     private List<Object> values = new ArrayList<Object>();
-    private contentTypes conentType = contentTypes.MIXED; 
 
+    // used to gengerate test mapping beans but could be used to query or 
+    // label the beans content 
+    // 
 	public enum contentTypes {
-		MIXED, NUMBER, DATE, STRING;
+		EMPTY, MIXED, NUMBER, DATE, STRING;
 
 		public static contentTypes getRandom()  {
 			contentTypes[] allopts = values();
 			int rand = (int) (Math.random() * allopts.length);			
 			return allopts[rand];
 		}		
+
+        public static contentTypes getRandom(List<contentTypes> inclusions)  {
+			contentTypes[] allopts = values();
+            contentTypes n = null;
+            //List<contentTypes> excludes = Arrays.asList(MIXED, EMPTY);
+            do {           
+			    final int rand = (int) (Math.random() * allopts.length);
+                n = inclusions.stream()
+                .filter(ex -> ex.equals(allopts[rand]))
+                .findFirst()
+                .orElse(null);    
+
+            } while ( n == null ); 
+			return n;
+		}	
 	};       
 
     public NameMappingBean() {
@@ -35,8 +52,11 @@ public class NameMappingBean  {
         setValues(vals);
     }
 
+    // not implemented but would iterate over valeus and return 
+    // beans content type
+
     public contentTypes getContentType() {
-        return this.conentType;
+        return null;
     }
 
     public String getName() {
@@ -75,22 +95,18 @@ public class NameMappingBean  {
 
     public void add(String value) {
         this.values.add(value);
-        this.conentType = contentTypes.STRING;
     }
     
     public void add(Double value) {
         this.values.add(value);
-        this.conentType = contentTypes.NUMBER;
     }
 
     public void add(Integer value) {
         this.values.add(value);
-        this.conentType = contentTypes.NUMBER;
     }
 
     public void add(Date value) {
         this.values.add(value);
-        this.conentType = contentTypes.DATE;
     }
     public String toString() {
 
