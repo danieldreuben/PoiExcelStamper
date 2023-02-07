@@ -33,10 +33,10 @@ import java.beans.Transient;
 class StamperApplicationTests {
 
 	String template = "Domestic Standard Upload Template";
-
 	String fileLocation = String.format("%s.xlsx", template); 
 	String writeFileLocation = String.format("W-%s", fileLocation);
-	String readFileLocation = String.format("W-%s", fileLocation);
+	//String readFileLocation = String.format("W-%s", fileLocation);
+	String readFileLocation = "gaps.xlsx";
 	String lookupFileLocation = String.format("W-%s", fileLocation);
 
 	String[] mixedArray = {"color","style","department","size","typeofbuy","material",

@@ -86,7 +86,10 @@ public class XlsxNamingAdapter  {
 
 					if (r != null) {		
 						Cell c = r.getCell(cellRef.getCol()); 
-						nmb.add(getCellConent(c));
+						if (c != null)
+							nmb.add(getCellConent(c));
+						else 
+							nmb.add((String) null);	
 					}					
 				}
 		} catch (Exception e) {
@@ -117,7 +120,10 @@ public class XlsxNamingAdapter  {
 
 			for (; r != null; r = workSheet.getRow(++startRow)) {
 				Cell c = r.getCell(cellsref.getCol()); 
-				nmb.add(getCellConent(c));					
+				if (c != null) 
+					nmb.add(getCellConent(c));		
+				else	
+					nmb.add((String) null);			
 			}
 			cols.put(val, nmb);   
 		});	
@@ -247,22 +253,22 @@ public class XlsxNamingAdapter  {
 
 	private static Object getCellConent(Cell c) {
 		Object res = null;
-		if (c != null)
-			switch (c.getCellType()) {
-				case NUMERIC:
-					res = c.getNumericCellValue();
-					/*if(DateUtil.isCellDateFormatted(c)) {
-						res = c.getDateCellValue();
-					}	*/				
-					break;
-				case STRING:
-					res = c.getStringCellValue();
-					break;
-				case BLANK:
-				case _NONE:				
-				case ERROR:
-					res = "";						
-			} 	
+
+		switch (c.getCellType()) {
+			case NUMERIC:
+				res = c.getNumericCellValue();
+				/*if(DateUtil.isCellDateFormatted(c)) {
+					res = c.getDateCellValue();
+				}	*/				
+				break;
+			case STRING:
+				res = c.getStringCellValue();
+				break;
+			case BLANK:
+			case _NONE:				
+			case ERROR:
+				res = "";						
+			}
 		return res;
 	}	
 
