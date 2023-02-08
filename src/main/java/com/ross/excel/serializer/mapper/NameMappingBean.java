@@ -1,43 +1,13 @@
 package com.ross.excel.serializer.mapper;
 
 import java.util.List;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Date;
 
 public class NameMappingBean  {
 
     private String name; 
-    private List<Object> values = new ArrayList<Object>();
-
-    // used to gengerate test mapping beans but could be used to query or 
-    // label the beans content 
-    // 
-	public enum contentTypes {
-		EMPTY, MIXED, NUMBER, DATE, STRING;
-
-		public static contentTypes getRandom()  {
-			contentTypes[] allopts = values();
-			int rand = (int) (Math.random() * allopts.length);			
-			return allopts[rand];
-		}		
-
-        public static contentTypes getRandom(List<contentTypes> inclusions)  {
-			//contentTypes[] allopts = values();
-            contentTypes n = null;
-            //List<contentTypes> excludes = Arrays.asList(MIXED, EMPTY);
-            //do {           
-			    final int rand = (int) (Math.random() * inclusions.size());
-                n = inclusions.get(rand);
-                /*n = inclusions.stream()
-                .filter(ex -> ex.equals(allopts[rand]))
-                .findFirst()
-                .orElse(null);    */
-
-            //} while ( n == null ); 
-			return n;
-		}	
-	};       
+    private List<Object> values = new ArrayList<Object>();      
 
     public NameMappingBean() {
     }
@@ -51,13 +21,6 @@ public class NameMappingBean  {
 
         this.name = name;
         setValues(vals);
-    }
-
-    // not implemented but would iterate over valeus and return 
-    // beans content type
-
-    public contentTypes getContentType() {
-        return null;
     }
 
     public String getName() {
@@ -109,10 +72,26 @@ public class NameMappingBean  {
     public void add(Date value) {
         this.values.add(value);
     }
+
     public String toString() {
 
         String s = getName() + ":" + getValues().toString();
         return (s.length() > 100 ? s.substring(0,100) + " ..." : s);
     }
+
+    // used to gengerate test mapping beans but could be used to query or 
+    // label the beans content 
+    // 
+	public enum contentTypes {
+		EMPTY, MIXED, NUMBER, DATE, STRING;
+
+        public static contentTypes getRandom(List<contentTypes> inclusions)  {
+			//contentTypes[] allopts = values();
+            contentTypes n = null;         
+            final int rand = (int) (Math.random() * inclusions.size());
+            n = inclusions.get(rand);
+			return n;
+		}	
+	};     
 
 }

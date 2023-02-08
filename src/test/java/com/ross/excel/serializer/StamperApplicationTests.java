@@ -1,16 +1,19 @@
 package com.ross.excel.serializer;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.function.Consumer;
-
+import java.util.stream.Collectors;
 import java.lang.Math;
 
 import com.ross.excel.serializer.StamperApplication;
 import com.ross.excel.serializer.mapper.NameMappingBean;
-import com.ross.excel.serializer.mapper.NameMappingBean.contentTypes;;
+import com.ross.excel.serializer.mapper.MappingElement;
+
+import com.ross.excel.serializer.mapper.NameMappingBean.contentTypes;
 import com.ross.excel.serializer.naming.XlsxNamingAdapter;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Order;
 import org.springframework.core.Ordered;
+
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -145,12 +149,11 @@ class StamperApplicationTests {
 			
 			System.out.println(">>> read-relative named range..");	
 			stamperApp.getWorkbookFromFile(readFileLocation);
-			Hashtable<String, NameMappingBean> nmb = 
+			List<NameMappingBean> nmbs = 
 				stamperApp.readRelativeRange(stamperApp.getNames(mixofnames));			
 
-			mixofnames.forEach( (val) -> { 
-
-				System.out.println(String.format("%s : %s", val, nmb.get(val)));
+			nmbs.forEach( (val) -> {
+				System.out.println(String.format("%s : %s", val.getName(), val));				
 			});
 
 		} catch (Exception e) {
@@ -160,6 +163,21 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+
+	// @method testNameBeansToRows
+	// test convert columns to rows
+	//
+
+	@Test
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	public void testNameBeansToRows() {
+		List<NameMappingBean> nmbs = XlsxNamingAdapter.getTestMappingBeans(mixofnames, 100);
+		List<MappingElement> elements = MappingElement.getInRows(nmbs);
+		//elements.forEach( (val) -> { System.out.println(String.format("%s", val)); });
+		Map<String, List<MappingElement>> elementmap = elements.stream()
+			.collect(Collectors.groupingBy(MappingElement::getLabel));	
+		elementmap.entrySet().stream().limit(10).forEach(e-> System.out.println(e));
+	}
 
 	// queries workbook for defined names
 

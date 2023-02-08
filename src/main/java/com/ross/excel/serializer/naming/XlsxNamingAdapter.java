@@ -99,9 +99,10 @@ public class XlsxNamingAdapter  {
 	// @return a hashtable of mapped bean values
 	//
 
-	public Hashtable<String, NameMappingBean> readRelativeRange(List<String> names) {
-
-		Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
+	//public Hashtable<String, NameMappingBean> readRelativeRange(List<String> names) {
+	public List<NameMappingBean> readRelativeRange(List<String> names) {
+		//Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
+		List<NameMappingBean> nmbs = new ArrayList<NameMappingBean>();
 
 		names.forEach( (val) -> { 	
 
@@ -118,10 +119,11 @@ public class XlsxNamingAdapter  {
 				else	
 					nmb.add((String) null);			
 			}
-			cols.put(val, nmb);   
+			//cols.put(val, nmb);   
+			nmbs.add(nmb);
 		});	
-
-		return cols;
+		//return cols;
+		return nmbs;
 	} 
 
     // @method writeInRange
@@ -199,15 +201,15 @@ public class XlsxNamingAdapter  {
 		CellStyle cs = workSheet.getColumnStyle(cellReference.getCol()) == null ?
 			workbook.getCellStyleAt(0) : workSheet.getColumnStyle(cellReference.getCol());	
 			
-		if (val.getContentType() == contentTypes.DATE)	{
+		/*if (val.getContentType() == contentTypes.DATE)	{
 			CreationHelper createHelper = workbook.getCreationHelper();  
 			CellStyle cellStyle = (XSSFCellStyle) workSheet.getWorkbook().createCellStyle();
 			cellStyle.cloneStyleFrom(cs);	
 		
-			//cellStyle.setDataFormat(  
-			//	createHelper.createDataFormat().getFormat("d/m/yy"));  		
+			cellStyle.setDataFormat(  
+				createHelper.createDataFormat().getFormat("d/m/yy"));  		
 			cs = cellStyle;						
-		}
+		}*/
 		return cs;
 	}
 
@@ -264,21 +266,21 @@ public class XlsxNamingAdapter  {
 	public boolean addLookupsFromBeans(String sheetName, Boolean hidden, List<NameMappingBean> beans) {
 
 
-		Sheet ws = workbook.createSheet(sheetName);
-		char col = 'A';
-		
-		for (NameMappingBean val : beans) {
+			Sheet ws = workbook.createSheet(sheetName);
+			char col = 'A';
+			
+			for (NameMappingBean val : beans) {
 
-			Name name = workbook.createName();
-			name.setNameName(val.getName());
-			int numitems = val.getValues().size();
-			String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
-			//System.out.println("range : " + val.getName() + ": " + range);
-			name.setRefersToFormula(range);
-			writeInRange(val);
-			++col;
-		}
-		workbook.setSheetHidden(workbook.getSheetIndex(sheetName), true);
+				Name name = workbook.createName();
+				name.setNameName(val.getName());
+				int numitems = val.getValues().size();
+				String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
+				//System.out.println("range : " + val.getName() + ": " + range);
+				name.setRefersToFormula(range);
+				writeInRange(val);
+				++col;
+			}
+			workbook.setSheetHidden(workbook.getSheetIndex(sheetName), true);
 
 		return true;
 	}
@@ -307,13 +309,9 @@ public class XlsxNamingAdapter  {
 	private AreaReference getAreaReference(String name) {
 
 		AreaReference aref = null;
+		Name namedCellIdx = workbook.getName(name);         			
+		aref = new AreaReference(namedCellIdx.getRefersToFormula(), workbook.getSpreadsheetVersion());
 
-		try {
-			Name namedCellIdx = workbook.getName(name);         			
-			aref = new AreaReference(namedCellIdx.getRefersToFormula(), workbook.getSpreadsheetVersion());
-		} catch (Exception e) {
-			//throw new RuntimeException(e);
-		}
 		return aref;		
 	}
 
@@ -351,18 +349,6 @@ public class XlsxNamingAdapter  {
 		return present;
 	} 
 
-	// @method getNamedCell 
-	// @return a cell reference for the named cell
-	//
-
-	private CellReference getNamedCell(String name) {
-
-		Name aNamedCell = workbook.getName(name); 
-		String ref = aNamedCell.getRefersToFormula();
-		//System.out.println(">>> named cell formula: " + ref);
-		return ref.contains(":") ? 
-			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
-	}
 
 	// @method getTestMappingBeans 
 	// Generates & fills randomly typed mapping beans 
@@ -481,6 +467,17 @@ public class XlsxNamingAdapter  {
 		return names;
 	}
 
+// @method getNamedCell 
+	// @return a cell reference for the named cell
+	//
+
+	private CellReference getNamedCell(String name) {
+
+		Name aNamedCell = workbook.getName(name); 
+		String ref = aNamedCell.getRefersToFormula();
+		//System.out.println(">>> named cell formula: " + ref);
+		return ref.contains(":") ? 
+			new CellReference(ref.substring(0, ref.indexOf(":"))) : new CellReference(ref);
 
 
 	*/
