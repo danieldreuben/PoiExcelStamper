@@ -143,28 +143,23 @@ public class XlsxNamingAdapter  {
 
 	public void writeInRange(NameMappingBean bean) {
 
-		try {
-				AreaReference ar = getAreaReference(bean.getName());
-				CellReference[] allCells = ar.getAllReferencedCells();
-				int nextval = 0;
-				
-				for (CellReference cellRef : allCells) {
+		AreaReference ar = getAreaReference(bean.getName());
+		CellReference[] allCells = ar.getAllReferencedCells();
+		int nextval = 0;
+		
+		for (CellReference cellRef : allCells) {
 
-					int startRow = cellRef.getRow();
-					Sheet workSheet = workbook.getSheet(cellRef.getSheetName());
-					Row r = (workSheet.getRow(startRow) != null ? 
-							workSheet.getRow(startRow++) : workSheet.createRow(startRow++));											
-					Cell c = r.createCell(cellRef.getCol()); 	
-					CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellRef, bean);	
+			int startRow = cellRef.getRow();
+			Sheet workSheet = workbook.getSheet(cellRef.getSheetName());
+			Row r = (workSheet.getRow(startRow) != null ? 
+					workSheet.getRow(startRow++) : workSheet.createRow(startRow++));											
+			Cell c = r.createCell(cellRef.getCol()); 	
+			CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellRef, bean);	
 
-					setCellFromBeanType(c, cs, (bean.getValues().size() > nextval) ? 
-						bean.getValues().get(nextval++) : null);
-				}
-		} catch (RuntimeException e) {
-
-			throw e;
-		}		
-	}
+			setCellFromBeanType(c, cs, (bean.getValues().size() > nextval) ? 
+				bean.getValues().get(nextval++) : null);
+		}
+}
 
 	// @method writeRelativeRange
 	// writes named beans relative to a named cell / range (MappingBean name correlates to an excel range). 
@@ -176,27 +171,23 @@ public class XlsxNamingAdapter  {
 	public void writeRelativeRange(List<NameMappingBean> names) 
 		throws Exception {
 
-		try {
-			names.forEach( (val) -> { 	
+		names.forEach( (val) -> { 	
 
-				CellReference cellReference = getAreaReference(val.getName()).getLastCell();
-				Sheet workSheet = workbook.getSheet(cellReference.getSheetName());				
-				int startRow = cellReference.getRow()+1;
-				int max = val.getValues().size();
+			CellReference cellReference = getAreaReference(val.getName()).getLastCell();
+			Sheet workSheet = workbook.getSheet(cellReference.getSheetName());				
+			int startRow = cellReference.getRow()+1;
+			int max = val.getValues().size();
 
-				for (int index = 0; index < max; startRow++, index++) {
+			for (int index = 0; index < max; startRow++, index++) {
 
-					Row r = (workSheet.getRow(startRow) != null ? 
-							workSheet.getRow(startRow) : workSheet.createRow(startRow));						
-					Cell c = r.createCell(cellReference.getCol()); 	
-					CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellReference, val);
-					setCellFromBeanType(c, cs, val.getValues().get(index));
-				}
-			});
-		} catch (RuntimeException e) {
+				Row r = (workSheet.getRow(startRow) != null ? 
+						workSheet.getRow(startRow) : workSheet.createRow(startRow));						
+				Cell c = r.createCell(cellReference.getCol()); 	
+				CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellReference, val);
+				setCellFromBeanType(c, cs, val.getValues().get(index));
+			}
+		});
 
-			throw e;
-		}
 	} 
 
 	// @method getDefaultOrCloneStyle
@@ -272,26 +263,23 @@ public class XlsxNamingAdapter  {
 
 	public boolean addLookupsFromBeans(String sheetName, Boolean hidden, List<NameMappingBean> beans) {
 
-		try {
-			Sheet ws = workbook.createSheet(sheetName);
-			char col = 'A';
-			
-			for (NameMappingBean val : beans) {
 
-				Name name = workbook.createName();
-				name.setNameName(val.getName());
-				int numitems = val.getValues().size();
-				String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
-				//System.out.println("range : " + val.getName() + ": " + range);
-				name.setRefersToFormula(range);
-				writeInRange(val);
-				++col;
-			}
-			workbook.setSheetHidden(workbook.getSheetIndex(sheetName), true);
+		Sheet ws = workbook.createSheet(sheetName);
+		char col = 'A';
+		
+		for (NameMappingBean val : beans) {
 
-		} catch (RuntimeException e) {
-			throw e; // e.printStackTrace();
+			Name name = workbook.createName();
+			name.setNameName(val.getName());
+			int numitems = val.getValues().size();
+			String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
+			//System.out.println("range : " + val.getName() + ": " + range);
+			name.setRefersToFormula(range);
+			writeInRange(val);
+			++col;
 		}
+		workbook.setSheetHidden(workbook.getSheetIndex(sheetName), true);
+
 		return true;
 	}
 
