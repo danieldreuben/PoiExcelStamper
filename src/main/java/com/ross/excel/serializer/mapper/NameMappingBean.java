@@ -23,17 +23,18 @@ public class NameMappingBean  {
 		}		
 
         public static contentTypes getRandom(List<contentTypes> inclusions)  {
-			contentTypes[] allopts = values();
+			//contentTypes[] allopts = values();
             contentTypes n = null;
             //List<contentTypes> excludes = Arrays.asList(MIXED, EMPTY);
-            do {           
-			    final int rand = (int) (Math.random() * allopts.length);
-                n = inclusions.stream()
+            //do {           
+			    final int rand = (int) (Math.random() * inclusions.size());
+                n = inclusions.get(rand);
+                /*n = inclusions.stream()
                 .filter(ex -> ex.equals(allopts[rand]))
                 .findFirst()
-                .orElse(null);    
+                .orElse(null);    */
 
-            } while ( n == null ); 
+            //} while ( n == null ); 
 			return n;
 		}	
 	};       
