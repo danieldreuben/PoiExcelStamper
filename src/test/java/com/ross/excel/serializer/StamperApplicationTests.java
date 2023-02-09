@@ -3,17 +3,13 @@ package com.ross.excel.serializer;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.lang.Math;
 
-import com.ross.excel.serializer.StamperApplication;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
 import com.ross.excel.serializer.mapper.NameMappingBean;
 import com.ross.excel.serializer.mapper.MappingElement;
 
-import com.ross.excel.serializer.mapper.NameMappingBean.contentTypes;
 import com.ross.excel.serializer.naming.XlsxNamingAdapter;
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.beans.Transient;
 
 @SpringBootTest
 @TestMethodOrder(OrderAnnotation.class)
@@ -66,7 +61,6 @@ class StamperApplicationTests {
 			
 			System.out.println(">>> Writing test beans..");
 			List<NameMappingBean> beans = XlsxNamingAdapter.getTestMappingBeans(mixofnames, 100);
-
 			stamperApp.getWorkbookFromFile(fileLocation);
 			stamperApp.writeRelativeRange(stamperApp.getWorkbookNames(beans));
 			stamperApp.writeWorkbookToFile(writeFileLocation);
@@ -138,23 +132,20 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
-
 	// reads spreadsheet content from set of ranges into mapping bean
 	//
 
 	@Test
 	@Order(Ordered.LOWEST_PRECEDENCE)
-	public void testReadRelaiveRange() {
+	public void testReadRelativeRange() {
 		try {
-			
+
 			System.out.println(">>> read-relative named range..");	
 			stamperApp.getWorkbookFromFile(readFileLocation);
 			List<NameMappingBean> nmbs = 
 				stamperApp.readRelativeRange(stamperApp.getNames(mixofnames));			
-
-			nmbs.forEach( (val) -> {
-				System.out.println(String.format("%s : %s", val.getName(), val));				
-			});
+			nmbs.stream().limit(5).forEach(e-> System.out.println(
+				StamperApplicationTests.trimOutput(e.getValues().toString(),200)));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -163,20 +154,31 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
+	// trims longer string outputs  
+	//
+	public static String trimOutput(String s, int max) {
+		return (s.length() > max ? String.format("%s...",s.substring(0,max)) : s);
+	}
 
 	// @method testNameBeansToRows
-	// test convert columns to rows
+	// test convert columnsush  to rows
 	//
 
 	@Test
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void testNameBeansToRows() {
-		List<NameMappingBean> nmbs = XlsxNamingAdapter.getTestMappingBeans(mixofnames, 100);
-		List<MappingElement> elements = MappingElement.getInRows(nmbs);
-		//elements.forEach( (val) -> { System.out.println(String.format("%s", val)); });
-		Map<String, List<MappingElement>> elementmap = elements.stream()
-			.collect(Collectors.groupingBy(MappingElement::getLabel));	
-		elementmap.entrySet().stream().limit(10).forEach(e-> System.out.println(e));
+		try {
+			System.out.println(">>> testNameBeansToRows..");	
+			List<NameMappingBean> nmbs = XlsxNamingAdapter.getTestMappingBeans(mixofnames, 10);
+			List<MappingElement> elements = MappingElement.getInRows(nmbs);	
+			Map<String, List<MappingElement>> elementmap = elements.stream()
+				.collect(Collectors.groupingBy(MappingElement::getLabel));	
+			elementmap.entrySet().stream().sorted(Map.Entry.comparingByKey()).limit(10)
+				.forEach(e-> System.out.println(StamperApplicationTests.trimOutput(e.toString(),200)));
+		} catch (Exception e) {
+			assertTrue(false);
+		}
+		assertTrue(true);		
 	}
 
 	// queries workbook for defined names

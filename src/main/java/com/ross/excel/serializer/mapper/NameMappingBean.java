@@ -7,7 +7,7 @@ import java.util.Date;
 public class NameMappingBean  {
 
     private String name; 
-    private List<Object> values = new ArrayList<Object>();      
+    private List<MappingElement> values = new ArrayList<MappingElement>();      
 
     public NameMappingBean() {
     }
@@ -16,7 +16,7 @@ public class NameMappingBean  {
 
         this.name = name;
     }
-  
+    // test lookups use only
     public NameMappingBean(String name, List<? extends Object> vals) {
 
         this.name = name;
@@ -33,9 +33,14 @@ public class NameMappingBean  {
         this.name = name;
     }
 
-    public List<Object> getValues() {
+    public List<MappingElement> getValues() {
 
         return values;
+    }
+
+    public MappingElement getValue(int pos) {
+
+        return values.get(pos);
     }
 
     private void setValues(List<? extends Object> vals) {
@@ -58,32 +63,36 @@ public class NameMappingBean  {
     }   
 
     public void add(String value) {
-        this.values.add(value);
+        this.values.add(new MappingElement(
+            this.name, String.format("%s",values.size()), value));
     }
     
     public void add(Double value) {
-        this.values.add(value);
+        this.values.add(new MappingElement(
+            this.name, String.format("%s",values.size()), value));
     }
 
     public void add(Integer value) {
-        this.values.add(value);
+        this.values.add(new MappingElement(
+            this.name, String.format("%s",values.size()), value));
     }
 
     public void add(Date value) {
-        this.values.add(value);
+        this.values.add(new MappingElement
+        (this.name, String.format("%s",values.size()), value));
     }
 
     public String toString() {
 
-        String s = getName() + ":" + getValues().toString();
-        return (s.length() > 100 ? s.substring(0,100) + " ..." : s);
+        String s = String.format("%s:%s",getName(), getValues());
+        return s;
     }
 
     // used to gengerate test mapping beans but could be used to query or 
-    // label the beans content 
+    // label general bean type content 
     // 
 	public enum contentTypes {
-		EMPTY, MIXED, NUMBER, DATE, STRING;
+		MIXED, NUMBER, DATE, STRING;
 
         public static contentTypes getRandom(List<contentTypes> inclusions)  {
 			//contentTypes[] allopts = values();

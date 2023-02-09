@@ -1,6 +1,5 @@
 package com.ross.excel.serializer.naming;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -26,11 +25,9 @@ import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.CreationHelper; 
-
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
+//import org.apache.poi.ss.usermodel.CreationHelper; 
+//import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 
 
 @Component
@@ -42,7 +39,7 @@ public class XlsxNamingAdapter  {
 
 	// @method readFromRange
 	// reads from a named range. 
-	// @param name of range
+	// @param List<String> of names ranges to read
 	// @return Hashtable of NameMappingBean
 	//
 
@@ -59,7 +56,7 @@ public class XlsxNamingAdapter  {
 		
 	// @method readFromRange
 	// reads from a named range. 
-	// @param name of range
+	// @param name of a single range
 	// @return NameMappingBean range content 
 	//
 
@@ -67,28 +64,24 @@ public class XlsxNamingAdapter  {
 
 		NameMappingBean nmb = null;
 
-		try {
-				AreaReference ar = getAreaReference(name);
-				CellReference[] allCells = ar.getAllReferencedCells();
-				nmb = new NameMappingBean(name); 
+		AreaReference ar = getAreaReference(name);
+		CellReference[] allCells = ar.getAllReferencedCells();
+		nmb = new NameMappingBean(name); 
 
-				for (CellReference cellRef : allCells) {
+		for (CellReference cellRef : allCells) {
 
-					Sheet workSheet = workbook.getSheet(cellRef.getSheetName());
-					Row r = workSheet.getRow(cellRef.getRow());	
+			Sheet workSheet = workbook.getSheet(cellRef.getSheetName());
+			Row r = workSheet.getRow(cellRef.getRow());	
 
-					if (r != null) {		
-						Cell c = r.getCell(cellRef.getCol()); 
-						if (c != null)
-							nmb.add(getCellConent(c));
-						else 
-							nmb.add((String) null);	
-					}					
-				}
-		} catch (Exception e) {
-
-			throw e;
-		}		
+			if (r != null) {		
+				Cell c = r.getCell(cellRef.getCol()); 
+				if (c != null)
+					nmb.add(getCellConent(c));
+				else 
+					nmb.add((String) null);	
+			}					
+		}
+	
 		return nmb;
 	}
 
@@ -99,9 +92,7 @@ public class XlsxNamingAdapter  {
 	// @return a hashtable of mapped bean values
 	//
 
-	//public Hashtable<String, NameMappingBean> readRelativeRange(List<String> names) {
 	public List<NameMappingBean> readRelativeRange(List<String> names) {
-		//Hashtable<String, NameMappingBean> cols = new Hashtable<String, NameMappingBean>();
 		List<NameMappingBean> nmbs = new ArrayList<NameMappingBean>();
 
 		names.forEach( (val) -> { 	
@@ -118,11 +109,9 @@ public class XlsxNamingAdapter  {
 					nmb.add(getCellConent(c));		
 				else	
 					nmb.add((String) null);			
-			}
-			//cols.put(val, nmb);   
+			} 
 			nmbs.add(nmb);
 		});	
-		//return cols;
 		return nmbs;
 	} 
 
@@ -170,8 +159,7 @@ public class XlsxNamingAdapter  {
 	// @param names a list of mapper beans to write
 	//
 
-	public void writeRelativeRange(List<NameMappingBean> names) 
-		throws Exception {
+	public void writeRelativeRange(List<NameMappingBean> names)  {
 
 		names.forEach( (val) -> { 	
 
@@ -186,7 +174,7 @@ public class XlsxNamingAdapter  {
 						workSheet.getRow(startRow) : workSheet.createRow(startRow));						
 				Cell c = r.createCell(cellReference.getCol()); 	
 				CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellReference, val);
-				setCellFromBeanType(c, cs, val.getValues().get(index));
+				setCellFromBeanType(c, cs, val.getValues().get(index).getValue());
 			}
 		});
 
@@ -248,7 +236,11 @@ public class XlsxNamingAdapter  {
 				}	*/				
 				break;
 			case STRING:
+			case FORMULA:
 				res = c.getStringCellValue();
+				break;
+			case BOOLEAN:
+				res = c.getBooleanCellValue();
 				break;
 			case BLANK:
 			case _NONE:				
@@ -275,7 +267,6 @@ public class XlsxNamingAdapter  {
 				name.setNameName(val.getName());
 				int numitems = val.getValues().size();
 				String range = String.format("'%s'!$%s$%d:$%s$%d", sheetName, col, 1, col, numitems);
-				//System.out.println("range : " + val.getName() + ": " + range);
 				name.setRefersToFormula(range);
 				writeInRange(val);
 				++col;
@@ -349,7 +340,6 @@ public class XlsxNamingAdapter  {
 		return present;
 	} 
 
-
 	// @method getTestMappingBeans 
 	// Generates & fills randomly typed mapping beans 
 	// @param list of bean names to generate
@@ -382,8 +372,7 @@ public class XlsxNamingAdapter  {
 						break;						
 					case STRING:					
 						n.add(n.getName().substring(0,3) + ":" + i);	
-					case MIXED:	// 
-					case EMPTY: // EMPTY MIXED excluded
+					case MIXED:	// MIXED excluded (above)
 				}							
 
 			}

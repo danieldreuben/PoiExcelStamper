@@ -14,21 +14,33 @@ public class MappingElement {
         this.label = label;
         this.value = value;
     }
+    // @method getInRows2
+    // collects mappingelements from set of beans
 
     public static List<MappingElement> getInRows (List<NameMappingBean> beans) {
         List<MappingElement> beanrows = new ArrayList<MappingElement>();
+
         beans.forEach( (val) -> { 
             for (int i = 0; i < val.getValues().size(); i++)
-                beanrows.add(new MappingElement(val.getName(), 
-                    String.format("%s", i), val.getValues().get(i)));  
+                beanrows.add(val.getValue(i));  
         });
         return beanrows;
-    }
+    }   
+
     public String toString() {
-        return String.format("%s:%s:%s",name, label, value);
+
+        return String.format("{%s-%s-%s}",name, label, value);
     }
 
     public String getLabel() {
-        return label;
+        return this.label;
     }
+
+    public String getName() {
+        return this.name;
+    }    
+
+    public Object getValue() {
+        return this.value;
+    }      
 }
