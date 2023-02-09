@@ -146,9 +146,9 @@ public class XlsxNamingAdapter  {
 					workSheet.getRow(startRow++) : workSheet.createRow(startRow++));											
 			Cell c = r.createCell(cellRef.getCol()); 	
 			CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellRef, bean);	
-
-			setCellFromBeanType(c, cs, (bean.getValues().size() > nextval) ? 
-				bean.getValues().get(nextval++) : null);
+			c.setCellStyle(cs);
+			setCellFromBeanType(c, (bean.getValues().size() > nextval) ? 
+				bean.getValues().get(nextval++).getValue() : null);
 		}
 }
 
@@ -174,7 +174,8 @@ public class XlsxNamingAdapter  {
 						workSheet.getRow(startRow) : workSheet.createRow(startRow));						
 				Cell c = r.createCell(cellReference.getCol()); 	
 				CellStyle cs  = getDefaultOrCloneStyle(workSheet, cellReference, val);
-				setCellFromBeanType(c, cs, val.getValues().get(index).getValue());
+				c.setCellStyle(cs);
+				setCellFromBeanType(c, val.getValues().get(index).getValue());
 			}
 		});
 
@@ -205,7 +206,7 @@ public class XlsxNamingAdapter  {
 	// sets cell type from bean value type  
 	//	
 
-	private void setCellFromBeanType(Cell c, CellStyle cs, Object val) {
+	private void setCellFromBeanType(Cell c, Object val) {
 
 		if (val == null) 
 			c.setBlank();
@@ -218,7 +219,7 @@ public class XlsxNamingAdapter  {
 		else if (val instanceof java.util.Date) {
 			c.setCellValue((java.util.Date) val);	
 		}  				
-		c.setCellStyle(cs);
+		//c.setCellStyle(cs);
 	}
 
 	// @method getCellConent
@@ -371,8 +372,8 @@ public class XlsxNamingAdapter  {
 						n.add(new java.util.Date());
 						break;						
 					case STRING:					
-						n.add(n.getName().substring(0,3) + ":" + i);	
-					case MIXED:	// MIXED excluded (above)
+						n.add(String.format("%s:%d",n.getName().substring(0,3), i));	
+					case MIXED:	// MIXED excluded from rand (above)
 				}							
 
 			}

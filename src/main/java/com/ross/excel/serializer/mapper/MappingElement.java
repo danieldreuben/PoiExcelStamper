@@ -1,6 +1,7 @@
 package com.ross.excel.serializer.mapper;
 
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.ArrayList;
 
 
@@ -14,7 +15,8 @@ public class MappingElement {
         this.label = label;
         this.value = value;
     }
-    // @method getInRows2
+
+    // @method getInRows
     // collects mappingelements from set of beans
 
     public static List<MappingElement> getInRows (List<NameMappingBean> beans) {
