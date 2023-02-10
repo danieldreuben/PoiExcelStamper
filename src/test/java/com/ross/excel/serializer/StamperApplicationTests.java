@@ -168,9 +168,12 @@ class StamperApplicationTests {
 	@Order(Ordered.LOWEST_PRECEDENCE)
 	public void testNameBeansToRows() {
 		try {
-			System.out.println(">>> Name Beans To Rows..");	
+			System.out.println(">>> Mapping Beans To Rows..");	
 			List<NameMappingBean> nmbs = XlsxNamingAdapter.getTestMappingBeans(mixofnames, 10);
-			List<MappingElement> elements = MappingElement.getInRows(nmbs);	
+			//List<MappingElement> elements = MappingElement.getInRows(nmbs);	
+			List<MappingElement> elements = nmbs.stream()
+				.flatMap(p -> p.getValues().stream())
+				.collect(Collectors.toList());
 			Map<String, List<MappingElement>> elementmap = elements.stream()
 				.collect(Collectors.groupingBy(MappingElement::getLabel));	
 			elementmap.entrySet().stream().sorted(Map.Entry.comparingByKey()).limit(7)
