@@ -81,7 +81,6 @@ public class XlsxNamingAdapter  {
 					nmb.add((String) null);	
 			}					
 		}
-	
 		return nmb;
 	}
 
