@@ -200,40 +200,6 @@ class StamperApplicationTests {
 		assertTrue(true);
 	}
 
-/* 
-	public List<NameMappingBean> getTestMappingBeans(List<String> names, int max) {
-
-		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
-		
-		names.forEach( (val) -> { 
-			beans.add(new NameMappingBean(val));
-		});
-
-		Consumer<NameMappingBean> methodbean = (n) -> { 
-
-			final NameMappingBean.contentTypes random = NameMappingBean.contentTypes.getRandom();
-			final Integer maximum = Integer.valueOf((int) ((0.1 + Math.random()) * max));
-
-			for (int i = 0; i < maximum; i++) {
-				switch (random) {
-					case NUMBER:
-						n.add((Math.random()) * max);
-						break;
-					case DATE:					
-						n.add(new java.util.Date());
-						break;
-					case MIXED:	// mixed not implemented 						
-					case STRING:					
-						n.add(n.getName().substring(0,3) + ":" + i);		
-				}							
-
-			}
-			//System.out.println(String.format("%s-%s : %s",n.getName(), random.ordinal(), n.getValues()));			
-		};
-		beans.forEach(methodbean);
-		return beans;
-	} */
-
 
 	public List<NameMappingBean> getTestLookups() {
 		List<NameMappingBean> beans = new ArrayList<NameMappingBean>();
